@@ -1,0 +1,11 @@
+#!/usr/bin/env zsh
+
+integer res m
+
+while read m; do
+  while (( ( m = m / 3 - 2 ) > 0 )); do
+    (( res += m ))
+  done
+done
+
+print $res
