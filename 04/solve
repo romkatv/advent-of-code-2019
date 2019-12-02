@@ -17,7 +17,7 @@ for noun in {0..99}; do
       esac
     done
     if (( p[0] == 19690720 )); then
-      echo - $(( 100 * noun + verb ))
+      echo - $((100 * noun + verb))
       return 0
     fi
   done
