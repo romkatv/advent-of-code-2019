@@ -1,3 +1,5 @@
 #!/usr/bin/env zsh
 
-awk '{ res += int($0 / 3) - 2 } END { print res }'
+integer res m
+while read m; do (( res += m / 3 - 2 )); done
+print $res
