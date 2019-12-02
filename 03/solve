@@ -1,0 +1,17 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh -o err_return -o no_unset -o ksh_arrays
+
+IFS=, read -A p
+p[1,2]=(12 2)
+
+for i in {0..${#p[@]}..4}; do
+  case ${p[i]} in
+    99) break;;
+    1) p[p[i+3]]=$((p[p[i+1]] + p[p[i+2]]));;
+    2) p[p[i+3]]=$((p[p[i+1]] * p[p[i+2]]));;
+    *) return 1;;
+  esac
+done
+
+echo - ${p[0]}
