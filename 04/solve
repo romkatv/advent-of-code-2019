@@ -1,0 +1,24 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh -o err_return -o no_unset -o ksh_arrays
+
+IFS=, read -A init
+
+for noun in {0..99}; do
+  for verb in {0..99}; do
+    p=(${init[@]})
+    p[1,2]=($noun $verb)
+    for i in {0..${#p[@]}..4}; do
+      case ${p[i]} in
+        99) break;;
+        1) p[p[i+3]]=$((p[p[i+1]] + p[p[i+2]]));;
+        2) p[p[i+3]]=$((p[p[i+1]] * p[p[i+2]]));;
+        *) return 1;;
+      esac
+    done
+    if (( p[0] == 19690720 )); then
+      echo - $(( 100 * noun + verb ))
+      return 0
+    fi
+  done
+done
