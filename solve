@@ -1,0 +1,12 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh -o err_return -o no_unset -o pushd_silent
+
+(( ARGC )) || set -- ${ZSH_SCRIPT:h}/<->(/:t)
+
+for task; do
+  pushd ${ZSH_SCRIPT:h}/$task
+  [[ ! -e Makefile ]] || make
+  ./solve <input >answer
+  popd
+done
