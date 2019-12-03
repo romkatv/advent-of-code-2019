@@ -4,4 +4,4 @@ emulate -L zsh -o err_return -o no_unset
 
 integer res m
 while read m; do (( res += m / 3 - 2 )); done
-print $res
+echo - $res

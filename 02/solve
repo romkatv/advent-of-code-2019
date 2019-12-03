@@ -10,4 +10,4 @@ while read m; do
   done
 done
 
-print $res
+echo - $res
