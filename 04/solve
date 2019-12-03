@@ -22,3 +22,5 @@ for noun in {0..99}; do
     fi
   done
 done
+
+return 1
