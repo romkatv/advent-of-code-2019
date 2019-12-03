@@ -32,4 +32,5 @@ for wire_label in first second; do
   done
 done
 
+(( res >= 0 ))
 echo - $res
