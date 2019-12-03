@@ -1,0 +1,35 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh -o err_return -o no_unset
+
+local -A grid=('0:0' '0')
+integer res=-1
+
+for wire_label in first second; do
+  IFS=, read -A wire_path
+  integer x=0 y=0 dist=0
+
+  for segment in $wire_path; do
+    case $segment in
+      L*) integer dx=-1 dy=0;;
+      R*) integer dx=1  dy=0;;
+      U*) integer dx=0  dy=1;;
+      D*) integer dx=0  dy=-1;;
+       *) return 1;
+    esac
+    repeat ${segment:1}; do
+      (( x += dx )) || true
+      (( y += dy )) || true
+      (( ++dist ))  || true
+      if [[ $wire_label == first ]]; then
+        grid[$x:$y]=$dist
+      elif [[ -v grid[$x:$y] ]]; then
+        integer total=$((grid[$x:$y] + dist))
+        (( res >= 0 && res < total )) || res=$total
+      fi
+    done
+  done
+done
+
+(( res >= 0 ))
+echo - $res
