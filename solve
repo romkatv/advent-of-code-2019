@@ -1,12 +1,15 @@
 #!/usr/bin/env zsh
 
-emulate -L zsh -o err_return -o no_unset -o pushd_silent
+emulate -L zsh -o err_return -o no_unset -o pushd_silent -o prompt_percent -o no_prompt_subst
 
 (( ARGC )) || set -- ${ZSH_SCRIPT:h}/<->(/:t)
 
 for task; do
+  [[ $task == <-> ]]
   pushd ${ZSH_SCRIPT:h}/$task
+  print -rP -- "Solving %B$task%b..." >&2
   [[ ! -e Makefile ]] || make
   ./solve <input >answer
+  print -rP -- "Answer for %B$task%b: %F{green}${(V)$(<answer)//\%//%%}%f" >&2
   popd
 done
