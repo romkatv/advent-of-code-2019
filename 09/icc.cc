@@ -79,13 +79,13 @@ class Arg {
       case 0:
         CHECK(mem[p] >= 0 && static_cast<size_t>(mem[p]) < mem.size());
         res.p_ = &mem[mem[p]];
-        res.immediate_ = false;
         break;
       case 1:
         res.p_ = &mem[p];
-        res.immediate_ = true;
         CHECK(std::is_same<R, int32_t>());
         break;
+      default:
+        CHECK(false);
     }
     mode /= 10;
     ++p;
@@ -96,7 +96,6 @@ class Arg {
   operator int32_t*() const { return p_; }
 
  private:
-  bool immediate_;
   int32_t* p_;
 };
 
