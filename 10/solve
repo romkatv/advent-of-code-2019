@@ -1,0 +1,5 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh -o err_return -o no_unset
+
+./icc <(<&0) <<<'5'
