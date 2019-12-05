@@ -1,0 +1,7 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh -o err_return -o no_unset
+
+res=($(./icc <(<&0) <<<'1'))
+(( $#res ))
+echo -E - $res[-1]
