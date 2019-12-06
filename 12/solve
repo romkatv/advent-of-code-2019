@@ -1,0 +1,34 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh -o err_return -o no_unset
+
+local -A child2parent
+
+while IFS=')' read parent child; do
+  [[ -n $parent && -n $child && ! -v child2parent[$child] ]]
+  child2parent[$child]=$parent
+done
+
+local -A my_parents
+
+integer dist=0
+local child=YOU
+while [[ -v child2parent[$child] ]]; do
+  local parent=$child2parent[$child]
+  my_parents[$parent]=$((dist++))
+  child=$parent
+done
+
+integer dist=0
+local child=SAN
+while true; do
+  local parent=$child2parent[$child]
+  if [[ -v my_parents[$parent] ]]; then
+    echo -E - $((dist + my_parents[$parent]))
+    return 0
+  fi
+  (( ++dist ))
+  child=$parent
+done
+
+return 1
