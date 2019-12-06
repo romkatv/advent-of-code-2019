@@ -1,0 +1,36 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh -o err_return -o no_unset
+
+local -A child2parent
+
+while IFS=')' read parent child; do
+  [[ -n $parent && -n $child && ! -v child2parent[$child] ]]
+  child2parent[$child]=$parent
+done
+
+local -A orbit_counts
+local first_planet
+
+function compute_orbit_count() {
+  [[ ! -v orbit_counts[$1] ]] || return 0
+  [[ $1 != $first_planet ]]
+  : ${first_planet:=$1}
+  if [[ -v child2parent[$1] ]]; then
+    local parent=$child2parent[$1]
+    compute_orbit_count $parent
+    orbit_counts[$1]=$((orbit_counts[$parent] + 1))
+  else
+    orbit_counts[$1]=0
+  fi
+  [[ $first_planet != $1 ]] || first_planet=
+}
+
+integer res
+
+for child in ${(k)child2parent}; do
+  compute_orbit_count $child
+  (( res += orbit_counts[$child] ))
+done
+
+echo - $res
