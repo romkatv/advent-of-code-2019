@@ -1,0 +1,45 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh -o err_return -o no_unset
+
+zmodload zsh/zpty
+
+read program
+
+function amp() {
+  {
+    echo -E - $1
+    while read line && [[ $line != done ]]; do
+      echo -E - $line
+    done
+  } | { ./icc -c "$program"; echo done }
+}
+
+integer a b c d e res=-1
+local range=({5..9})
+
+for a in $range; do
+  for b in ${range:#($a)}; do
+    for c in ${range:#($a|$b)}; do
+      for d in ${range:#($a|$b|$c)}; do
+        for e in ${range:#($a|$b|$c|$d)}; do
+          zpty z "amp $a | amp $b | amp $c | amp $d | amp $e"
+          zpty -w z 0
+          integer last=-1
+          while true; do
+            zpty -r z line
+            line=${line%%[[:space:]]*}
+            [[ $line != done ]] || break
+            zpty -w z $line
+            last=line
+          done
+          zpty -d z
+          (( last >= 0 ))
+          (( res > last )) || res=last
+        done
+      done
+    done
+  done
+done
+
+echo -E - $res
