@@ -117,7 +117,7 @@ void EvalInstruction(State& state, void (*f)(State&, Args...)) {
   std::apply(f, std::tuple_cat(std::tie(state), args));
 }
 
-int32_t Narrow(int64_t n) {
+int32_t To32(int64_t n) {
   CHECK(n >= std::numeric_limits<int32_t>::min());
   CHECK(n <= std::numeric_limits<int32_t>::max());
   return n;
@@ -129,14 +129,14 @@ void JumpIf(State& state, bool cond, int32_t pos) {
   state.p = pos;
 }
 
-void Op_Add(State&, int32_t a, int32_t b, int32_t* out) { *out = Narrow(int64_t{a} + int64_t{b}); }
-void Op_Mul(State&, int32_t a, int32_t b, int32_t* out) { *out = Narrow(int64_t{a} * int64_t{b}); }
-void Op_Input(State&, int32_t* out) { CHECK(std::cin >> *out); }
-void Op_Output(State&, int32_t a) { CHECK(std::cout << a << '\n'); }
-void Op_JumpNZ(State& state, int32_t a, int32_t pos) { JumpIf(state, a != 0, pos); }
-void Op_JumpZ(State& state, int32_t a, int32_t pos) { JumpIf(state, a == 0, pos); }
-void Op_LT(State&, int32_t a, int32_t b, int32_t* out) { *out = a < b; }
-void Op_EQ(State&, int32_t a, int32_t b, int32_t* out) { *out = a == b; }
+void Op_In (State& s,                       int32_t* out) { CHECK(std::cin >> *out);              }
+void Op_Out(State& s, int32_t a                         ) { CHECK(std::cout << a << '\n');        }
+void Op_JNZ(State& s, int32_t a, int32_t b              ) { JumpIf(s, a != 0, b);                 }
+void Op_JZ (State& s, int32_t a, int32_t b              ) { JumpIf(s, a == 0, b);                 }
+void Op_LT (State& s, int32_t a, int32_t b, int32_t* out) { *out = a < b;                         }
+void Op_EQ (State& s, int32_t a, int32_t b, int32_t* out) { *out = a == b;                        }
+void Op_Add(State& s, int32_t a, int32_t b, int32_t* out) { *out = To32(int64_t{a} + int64_t{b}); }
+void Op_Mul(State& s, int32_t a, int32_t b, int32_t* out) { *out = To32(int64_t{a} * int64_t{b}); }
 
 void Eval(State& state) {
   auto& mem = state.mem;
@@ -145,15 +145,15 @@ void Eval(State& state) {
     CHECK(p < mem.size());
     CHECK(mem[p] >= 0);
     switch (mem[p] % 100) {
-      case 99: return;
       case 1: EvalInstruction(state, Op_Add); break;
       case 2: EvalInstruction(state, Op_Mul); break;
-      case 3: EvalInstruction(state, Op_Input); break;
-      case 4: EvalInstruction(state, Op_Output); break;
-      case 5: EvalInstruction(state, Op_JumpNZ); break;
-      case 6: EvalInstruction(state, Op_JumpZ); break;
-      case 7: EvalInstruction(state, Op_LT); break;
-      case 8: EvalInstruction(state, Op_EQ); break;
+      case 3: EvalInstruction(state, Op_In);  break;
+      case 4: EvalInstruction(state, Op_Out); break;
+      case 5: EvalInstruction(state, Op_JNZ); break;
+      case 6: EvalInstruction(state, Op_JZ);  break;
+      case 7: EvalInstruction(state, Op_LT);  break;
+      case 8: EvalInstruction(state, Op_EQ);  break;
+      case 99: return;
       default: CHECK(false);
     }
   }
