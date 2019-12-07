@@ -1,0 +1,30 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh -o err_return -o no_unset
+
+read program
+
+function amp() {
+  local prev
+  read prev
+  ./icc -c "$program" <<<"$1 $prev"
+}
+
+integer a b c d e x res=-1
+local range=({0..4})
+
+for a in $range; do
+  for b in ${range:#($a)}; do
+    for c in ${range:#($a|$b)}; do
+      for d in ${range:#($a|$b|$c)}; do
+        for e in ${range:#($a|$b|$c|$d)}; do
+          x="$(<<<0 amp $a | amp $b | amp $c | amp $d | amp $e)"
+          (( x >= 0 ))
+          (( res > x )) || res=x
+        done
+      done
+    done
+  done
+done
+
+echo -E - $res
