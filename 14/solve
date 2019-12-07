@@ -10,6 +10,17 @@ function amp() (
   { echo -E - $1; exec cat } | { ./icc -c "$program"; exit }
 )
 
+function loop() {
+  zpty z $1
+  reply=
+  local line
+  while zpty -r z line; do
+    reply=${line%$'\r\n'}
+    zpty -w z $reply
+  done
+  zpty -d z
+}
+
 integer a b c d e res=-1
 range=({5..9})
 
@@ -18,17 +29,9 @@ for a in $range; do
     for c in ${range:#($a|$b)}; do
       for d in ${range:#($a|$b|$c)}; do
         for e in ${range:#($a|$b|$c|$d)}; do
-          zpty z "amp $a | amp $b | amp $c | amp $d | amp $e"
-          zpty -w z 0
-          integer last=-1
-          while zpty -r z line; do
-            last=${line%%[[:space:]]*}
-            (( last >= 0 ))
-            zpty -w z $last
-          done
-          zpty -d z
-          (( last >= 0 ))
-          (( res > last )) || res=last
+          loop "amp '$a 0' | amp $b | amp $c | amp $d | amp $e"
+          (( reply >= 0 ))
+          (( res > reply )) || res=reply
         done
       done
     done
