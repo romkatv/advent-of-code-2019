@@ -11,7 +11,7 @@ function amp() (
 )
 
 integer a b c d e res=-1
-local range=({5..9})
+range=({5..9})
 
 for a in $range; do
   for b in ${range:#($a)}; do
@@ -22,9 +22,9 @@ for a in $range; do
           zpty -w z 0
           integer last=-1
           while zpty -r z line; do
-            line=${line%%[[:space:]]*}
-            zpty -w z $line
-            last=line
+            last=${line%%[[:space:]]*}
+            (( last >= 0 ))
+            zpty -w z $last
           done
           zpty -d z
           (( last >= 0 ))
@@ -35,4 +35,5 @@ for a in $range; do
   done
 done
 
+(( res >= 0 ))
 echo -E - $res
