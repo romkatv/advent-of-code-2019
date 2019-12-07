@@ -21,7 +21,7 @@ function loop() {
   zpty -d z
 }
 
-integer a b c d e res=-1
+integer a b c d e res
 range=({5..9})
 
 for a in $range; do
@@ -30,7 +30,7 @@ for a in $range; do
       for d in ${range:#($a|$b|$c)}; do
         for e in ${range:#($a|$b|$c|$d)}; do
           loop "amp '$a 0' | amp $b | amp $c | amp $d | amp $e"
-          (( reply >= 0 ))
+          (( reply > 0 ))
           (( res > reply )) || res=reply
         done
       done
@@ -38,5 +38,5 @@ for a in $range; do
   done
 done
 
-(( res >= 0 ))
+(( res > 0 ))
 echo -E - $res
