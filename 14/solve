@@ -2,31 +2,31 @@
 
 emulate -L zsh -o err_return -o no_unset
 
-zmodload zsh/zpty
-
 read program
 
 function amp() (
   { echo -E - $1; exec cat } | { ./icc -c "$program"; exit }
 )
 
-integer a b c d e res=-1
-local range=({5..9})
+integer a b c d e x res=-1
+range=({5..9})
+fifo="$(mktemp -u)"
 
 for a in $range; do
   for b in ${range:#($a)}; do
     for c in ${range:#($a|$b)}; do
       for d in ${range:#($a|$b|$c)}; do
         for e in ${range:#($a|$b|$c|$d)}; do
-          zpty z "amp $a | amp $b | amp $c | amp $d | amp $e"
-          zpty -w z 0
+          mkfifo $fifo
+          exec 3< <( <$fifo amp "$a" | amp $b | amp $c | amp $d | amp $e ) 4>$fifo
+          echo 0 >&4
           integer last=-1
-          while zpty -r z line; do
-            line=${line%%[[:space:]]*}
-            zpty -w z $line
-            last=line
+          while read -u 3 x; do
+            echo -E - $x >&4
+            last=x
           done
-          zpty -d z
+          exec 3>&- 4>&-
+          rm $fifo
           (( last >= 0 ))
           (( res > last )) || res=last
         done
