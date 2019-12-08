@@ -42,8 +42,6 @@ function store() {
   mem[pos]=$1
 }
 
-function jumpc() { (( $1 )) || p=$2 }
-
 function readnum() {
   local res
   read -r res
@@ -52,6 +50,8 @@ function readnum() {
   return res
 }
 functions -M readnum 0
+
+function jumpc() { (( $1 )) || p=$2 }
 
 [[ -z "${functions[(I)op_<->]}" ]]
 
