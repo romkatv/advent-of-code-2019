@@ -9,7 +9,7 @@ local program
 read -r program
 
 function amp() (
-  { echo -E - $1; exec cat } | { ./icc -c $program; exit }
+  { echo -E - $1; exec cat } | { ./icc $program; exit }
 )
 
 function loop() {
@@ -50,7 +50,7 @@ for a in $range; do
     for c in ${range:#($a|$b)}; do
       for d in ${range:#($a|$b|$c)}; do
         for e in ${range:#($a|$b|$c|$d)}; do
-          out="$(loop "amp '$a 0' | amp $b | amp $c | amp $d | amp $e")"
+          out="$(loop "amp $'$a\n0' | amp $b | amp $c | amp $d | amp $e")"
           [[ $out == (#b)(*$'\n'|)(<1->) ]]
           (( res > match[2] )) || res=$match[2]
         done
