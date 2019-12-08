@@ -37,20 +37,20 @@ function loop() {
     wait $!
   } always {
     rm -f "$fin" "$fout"
-    [[ -z $fdin ]] || exec {fdin}>&-
+    [[ -z $fdin  ]] || exec {fdin}>&-
     [[ -z $fdout ]] || exec {fdout}>&-
   }
 }
 
 local -i a b c d e res
-local out range=({5..9}) match=()
+local -a range=({5..9}) match
 
 for a in $range; do
   for b in ${range:#($a)}; do
     for c in ${range:#($a|$b)}; do
       for d in ${range:#($a|$b|$c)}; do
         for e in ${range:#($a|$b|$c|$d)}; do
-          out="$(loop "amp $'$a\n0' | amp $b | amp $c | amp $d | amp $e")"
+          local out="$(loop "amp $'$a\n0' | amp $b | amp $c | amp $d | amp $e")"
           [[ $out == (#b)(*$'\n'|)(<1->) ]]
           (( res > match[2] )) || res=$match[2]
         done
