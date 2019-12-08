@@ -1,8 +1,7 @@
 #!/usr/bin/env zsh
 
 emulate -L zsh
-setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global
-setopt ksh_arrays
+setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global ksh_arrays
 
 local -a p
 IFS=, read -rA p
