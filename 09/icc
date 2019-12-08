@@ -30,8 +30,8 @@ function fetch() {
   while (( ARGC )); do
     local -i res m
     next res
-    (( m = mode % 10 )) || true
-    (( mode /= 10 ))    || true
+    (( m = mode % 10, 1 ))
+    (( mode /= 10, 1 ))
     if (( m == 0 )); then
       at $res res
     else
@@ -46,7 +46,7 @@ function store() {
   local -i pos
   next pos
   (( mode % 10 == 0 ))
-  (( mode /= 10 )) || true
+  (( mode /= 10, 1 ))
   (( pos >= 0 && pos < ${#mem[@]} ))
   [[ $1 == $~num ]]
   mem[pos]=$1

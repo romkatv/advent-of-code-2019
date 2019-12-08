@@ -21,9 +21,9 @@ for wire_label in first second; do
        *) return 1;
     esac
     repeat ${segment:1}; do
-      (( x += dx )) || true
-      (( y += dy )) || true
-      (( ++dist ))  || true
+      (( x += dx, 1 ))
+      (( y += dy, 1 ))
+      (( ++dist ))
       if [[ $wire_label == first ]]; then
         grid[$x:$y]=$dist
       elif [[ -v grid[$x:$y] ]]; then
