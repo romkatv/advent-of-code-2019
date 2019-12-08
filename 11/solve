@@ -32,7 +32,7 @@ local -i res
 
 for child in ${(k)child2parent}; do
   compute_orbit_count $child
-  (( res += orbit_counts[$child] ))
+  res+=orbit_counts[$child]
 done
 
 echo -E - $res

@@ -8,7 +8,7 @@ local -i res
 
 while read -r n; do
   [[ $n == <-> ]]
-  (( res += n / 3 - 2 ))
+  res+='n / 3 - 2'
 done
 
 echo - $res

@@ -29,7 +29,7 @@ while true; do
     echo -E - $((dist + my_parents[$parent]))
     return 0
   fi
-  (( ++dist ))
+  dist+=1
   child=$parent
 done
 

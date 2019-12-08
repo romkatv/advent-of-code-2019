@@ -9,7 +9,7 @@ local -i res
 while read -r n; do
   [[ $n == <-> ]]
   while (( ( n = n / 3 - 2 ) > 0 )); do
-    (( res += n ))
+    res+=n
   done
 done
 
