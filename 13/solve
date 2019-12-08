@@ -10,17 +10,17 @@ function amp() (
   { echo -E - $1; exec cat } | ./icc $program
 )
 
-local -i a b c d e x res=-1
-local range=({0..4})
+local -i a b c d e res=-1
+local range=({0..4}) out
 
 for a in $range; do
   for b in ${range:#($a)}; do
     for c in ${range:#($a|$b)}; do
       for d in ${range:#($a|$b|$c)}; do
         for e in ${range:#($a|$b|$c|$d)}; do
-          x="$(<<<0 amp $a | amp $b | amp $c | amp $d | amp $e)"
-          (( x >= 0 ))
-          (( res > x )) || res=x
+          out="$(<<<0 amp $a | amp $b | amp $c | amp $d | amp $e)"
+          [[ $out == <-> ]]
+          (( res > out )) || res=out
         done
       done
     done

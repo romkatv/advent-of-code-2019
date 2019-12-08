@@ -43,14 +43,14 @@ function loop() {
 }
 
 local -i a b c d e res
-local -a range=({5..9}) match
+local range=({5..9}) match=() out
 
 for a in $range; do
   for b in ${range:#($a)}; do
     for c in ${range:#($a|$b)}; do
       for d in ${range:#($a|$b|$c)}; do
         for e in ${range:#($a|$b|$c|$d)}; do
-          local out="$(loop "amp $a$'\n'0 | amp $b | amp $c | amp $d | amp $e")"
+          out="$(loop "amp $a$'\n'0 | amp $b | amp $c | amp $d | amp $e")"
           [[ $out == (#b)(*$'\n'|)(<1->) ]]
           (( res > match[2] )) || res=$match[2]
         done
