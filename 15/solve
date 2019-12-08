@@ -3,10 +3,12 @@
 emulate -L zsh
 setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global warn_nested_var
 
-local layer c
-local -i zeros=151 res
+local -ir w=25 h=6
 
-while read -rk 150 -u 0 layer; do
+local layer c
+local -i zeros=$((w*h+1)) res
+
+while read -rk $((w*h)) -u 0 layer; do
   local -A hist=()
   for c in {0..2}; do
     hist[$c]=${#layer//[^$c]}
@@ -17,5 +19,7 @@ while read -rk 150 -u 0 layer; do
   fi
 done
 
-(( zeros <= 150 ))
+[[ $layer == [[:space:]]# ]]
+
+(( zeros <= w*h ))
 echo -E - $res

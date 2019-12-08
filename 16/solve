@@ -3,21 +3,25 @@
 emulate -L zsh
 setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global warn_nested_var
 
-local -i i
-local layer img=${(l:150::2:):-}
+local -ir w=25 h=6
 
-while read -rk 150 -u 0 layer; do
-  for i in {1..150}; do
+local -i i
+local layer img=${(l:$((w*h))::2:):-}
+
+while read -rk $#img -u 0 layer; do
+  for i in {1..$#img}; do
     if [[ $img[i] == 2 ]]; then
       img[i]=$layer[i]
     fi
   done
 done
 
+[[ $layer == [[:space:]]# ]]
 [[ $img == [01]# ]]
 
-for i in {1..126..25}; do
-  echo -E - ${${img[i,i+24]//0/ }//1/#} >&2
+for i in {1..$h}; do
+  local line=$img[(i-1)*w+1,i*w]
+  echo -E - ${${line//0/ }//1/#} >&2
 done
 
 echo -E - $img
