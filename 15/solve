@@ -6,7 +6,7 @@ setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global
 local -ir w=25 h=6
 
 local layer c
-local -i zeros=$((w*h+1)) res
+local -i zeros='w*h + 1' res
 
 while read -rk $((w*h)) -u 0 layer; do
   local -A hist=()
@@ -15,7 +15,7 @@ while read -rk $((w*h)) -u 0 layer; do
   done
   if (( hist[0] < zeros )); then
     zeros=$hist[0]
-    res=$((hist[1] * hist[2]))
+    res='hist[1] * hist[2]'
   fi
 done
 

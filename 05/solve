@@ -28,7 +28,7 @@ for wire_label in first second; do
       if [[ $wire_label == first ]]; then
         grid[$x:$y]=''
       elif [[ -v grid[$x:$y] ]]; then
-        local -i dist=$((abs(x) + abs(y)))
+        local -i dist='abs(x) + abs(y)'
         (( res >= 0 && res < dist )) || res=$dist
       fi
     done

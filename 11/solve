@@ -21,7 +21,7 @@ function compute_orbit_count() {
   if [[ -v child2parent[$1] ]]; then
     local parent=$child2parent[$1]
     compute_orbit_count $parent
-    orbit_counts[$1]=$((orbit_counts[$parent] + 1))
+    orbit_counts[$1]="orbit_counts[$parent] + 1"
   else
     orbit_counts[$1]=0
   fi
