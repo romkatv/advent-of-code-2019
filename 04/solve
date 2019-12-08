@@ -26,11 +26,6 @@ function store() {
   mem[pos]=$1
 }
 
-[[ -z "${functions[(I)op_<->]}" ]]
-
-function op_1()  { store $(( at(at(p++)) + at(at(p++)) )) }  # add
-function op_2()  { store $(( at(at(p++)) * at(at(p++)) )) }  # mul
-
 local -i noun verb
 for noun in {99..0}; do
   for verb in {99..0}; do
@@ -38,12 +33,12 @@ for noun in {99..0}; do
     mem=(${init[@]})
     mem[1,2]=($noun $verb)
     while true; do
-      local -i instr=at(p++)
-      (( instr > 0 ))
-      (( instr != 99 )) || break
-      local op=op_$instr
-      (( ${+functions[$op]} ))
-      $op
+      case $(( at(p++) )); in
+        99) break;;
+        1) store $(( at(at(p++)) + at(at(p++)) ));;
+        2) store $(( at(at(p++)) * at(at(p++)) ));;
+        *) return 1;;
+      esac
     done
     if (( mem[0] == 19690720 )); then
       echo - $((100 * noun + verb))
