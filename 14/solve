@@ -50,7 +50,7 @@ for a in $range; do
     for c in ${range:#($a|$b)}; do
       for d in ${range:#($a|$b|$c)}; do
         for e in ${range:#($a|$b|$c|$d)}; do
-          local out="$(loop "amp $'$a\n0' | amp $b | amp $c | amp $d | amp $e")"
+          local out="$(loop "amp $a$'\n'0 | amp $b | amp $c | amp $d | amp $e")"
           [[ $out == (#b)(*$'\n'|)(<1->) ]]
           (( res > match[2] )) || res=$match[2]
         done

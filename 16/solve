@@ -6,7 +6,7 @@ setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global
 local -ir w=25 h=6
 
 local -i i
-local layer img=${(l:$((w*h))::2:):-}
+local layer img=${(l:w*h::2:):-}
 
 while read -rk $#img -u 0 layer; do
   for i in {1..$#img}; do
