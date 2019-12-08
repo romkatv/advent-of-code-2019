@@ -12,12 +12,15 @@ local -i min max
 (( max <= 999999 )) || max=999999
 
 local n
-local -i res
+local -i res c
 
 for ((n = min; n <= max; ++n)); do
   (( n[6] >= n[5] && n[5] >= n[4] && n[4] >= n[3] && n[3] >= n[2] && n[2] >= n[1] )) || continue
-  [[ .$n. == *([^1]11[^1]|[^2]22[^2]|[^3]33[^3]|[^4]44[^4]|[^5]55[^5]|[^6]66[^6]|[^7]77[^7]|[^8]88[^8]|[^9]99[^9])* ]] || continue
-  res+=1
+  for c in {1..9}; do
+    [[ .$n. == *[^$c]${c}${c}[^$c]* ]] || continue
+    res+=1
+    break
+  done
 done
 
 echo -E - $res
