@@ -1,0 +1,19 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh -o err_return -o no_unset
+
+local layer c
+local -i zeros=151 res
+while read -rk 150 -u 0 layer; do
+  local -A hist
+  for c in {0..2}; do
+    hist[$c]=${#layer//[^$c]}
+  done
+  if (( hist[0] < zeros )); then
+    zeros=$hist[0]
+    res=$((hist[1] * hist[2]))
+  fi
+done
+
+(( zeros <= 150 ))
+echo -E - $res
