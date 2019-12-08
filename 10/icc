@@ -4,8 +4,6 @@ emulate -L zsh
 setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global
 setopt ksh_arrays
 
-zmodload zsh/mathfunc
-
 (( ARGC == 1 ))
 
 local -r num="(-<0-$((1<<31))>|<0-$((1<<31-1))>)"
