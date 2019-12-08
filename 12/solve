@@ -1,17 +1,19 @@
 #!/usr/bin/env zsh
 
-emulate -L zsh -o err_return -o no_unset
+emulate -L zsh
+setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global warn_nested_var
 
 local -A child2parent
+local parent child
 
-while IFS=')' read parent child; do
+while IFS=')' read -r parent child; do
   [[ -n $parent && -n $child && ! -v child2parent[$child] ]]
   child2parent[$child]=$parent
 done
 
 local -A my_parents
 
-integer dist=0
+local -i dist=0
 local child=YOU
 while [[ -v child2parent[$child] ]]; do
   local parent=$child2parent[$child]
@@ -19,7 +21,7 @@ while [[ -v child2parent[$child] ]]; do
   child=$parent
 done
 
-integer dist=0
+local -i dist=0
 local child=SAN
 while true; do
   local parent=$child2parent[$child]

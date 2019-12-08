@@ -1,18 +1,23 @@
 #!/usr/bin/env zsh
 
-emulate -L zsh -o err_return -o no_unset
+emulate -L zsh
+setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global warn_nested_var
 
-integer min max res
-IFS=- read min max
+local min max
+IFS=- read -r min max
+[[ $min == <-> && $max == <-> ]]
 
+local -i min max
 (( min >= 100000 )) || min=100000
 (( max <= 999999 )) || max=999999
 
 local n
+local -i res
+
 for ((n = min; n <= max; ++n)); do
   (( n[6] >= n[5] && n[5] >= n[4] && n[4] >= n[3] && n[3] >= n[2] && n[2] >= n[1] )) || continue
   [[ .$n. == *([^1]11[^1]|[^2]22[^2]|[^3]33[^3]|[^4]44[^4]|[^5]55[^5]|[^6]66[^6]|[^7]77[^7]|[^8]88[^8]|[^9]99[^9])* ]] || continue
   (( ++res ))
 done
 
-echo - $res
+echo -E - $res

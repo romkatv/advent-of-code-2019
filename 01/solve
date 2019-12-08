@@ -1,7 +1,14 @@
 #!/usr/bin/env zsh
 
-emulate -L zsh -o err_return -o no_unset
+emulate -L zsh
+setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global warn_nested_var
 
-integer res m
-while read m; do (( res += m / 3 - 2 )); done
+local n
+local -i res
+
+while read -r n; do
+  [[ $n == <-> ]]
+  (( res += n / 3 - 2 ))
+done
+
 echo - $res

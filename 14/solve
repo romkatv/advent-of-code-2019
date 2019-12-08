@@ -1,37 +1,45 @@
 #!/usr/bin/env zsh
 
-emulate -L zsh -o err_return -o no_unset
+emulate -L zsh
+setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global warn_nested_var
 
-zmodload zsh/zpty
-
-read program
+local program
+read -r program
 
 function amp() (
   { echo -E - $1; exec cat } | { ./icc -c $program; exit }
 )
 
 function loop() {
-  zpty z $1
-  reply=
-  local line
-  while zpty -r z line; do
-    reply=${line%$'\r\n'}
-    zpty -w z $reply
-  done
-  zpty -d z
+  local fin fout fdin fdout line
+  {
+    fin="$(mktemp -u)"
+    fout="$(mktemp -u)"
+    mkfifo $fin $fout
+    eval $1 <$fin >$fout &
+    exec {fdin}>$fin {fdout}<$fout
+    while read -ru $fdout line; do
+      echo -E - $line >&1 >&$fdin
+    done
+    wait $!
+  } always {
+    rm -f "$fin" "$fout"
+    [[ -z $fdin ]] || exec {fdin}>&-
+    [[ -z $fdout ]] || exec {fdout}>&-
+  }
 }
 
-integer a b c d e res
-range=({5..9})
+local -i a b c d e res
+local out range=({5..9}) match=()
 
 for a in $range; do
   for b in ${range:#($a)}; do
     for c in ${range:#($a|$b)}; do
       for d in ${range:#($a|$b|$c)}; do
         for e in ${range:#($a|$b|$c|$d)}; do
-          loop "amp '$a 0' | amp $b | amp $c | amp $d | amp $e"
-          (( reply > 0 ))
-          (( res > reply )) || res=reply
+          out="$(loop "amp '$a 0' | amp $b | amp $c | amp $d | amp $e")"
+          [[ $out == (#b)(*$'\n'|)(<1->) ]]
+          (( res > match[2] )) || res=$match[2]
         done
       done
     done

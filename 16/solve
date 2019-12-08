@@ -1,9 +1,11 @@
 #!/usr/bin/env zsh
 
-emulate -L zsh -o err_return -o no_unset -o extended_glob
+emulate -L zsh
+setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global warn_nested_var
 
 local -i i
 local layer img=${(l:150::2:):-}
+
 while read -rk 150 -u 0 layer; do
   for i in {1..150}; do
     if [[ $img[i] == 2 ]]; then

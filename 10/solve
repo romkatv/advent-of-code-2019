@@ -1,5 +1,6 @@
 #!/usr/bin/env zsh
 
-emulate -L zsh -o err_return -o no_unset
+emulate -L zsh
+setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global warn_nested_var
 
 ./icc <(<&0) <<<'5'

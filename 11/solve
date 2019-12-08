@@ -1,10 +1,12 @@
 #!/usr/bin/env zsh
 
-emulate -L zsh -o err_return -o no_unset
+emulate -L zsh
+setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global warn_nested_var
 
 local -A child2parent
+local parent child
 
-while IFS=')' read parent child; do
+while IFS=')' read -r parent child; do
   [[ -n $parent && -n $child && ! -v child2parent[$child] ]]
   child2parent[$child]=$parent
 done
@@ -13,6 +15,7 @@ local -A orbit_counts
 local first_planet
 
 function compute_orbit_count() {
+  unsetopt warn_nested_var
   [[ ! -v orbit_counts[$1] ]] || return 0
   [[ $1 != $first_planet ]]
   : ${first_planet:=$1}
@@ -26,11 +29,11 @@ function compute_orbit_count() {
   [[ $first_planet != $1 ]] || first_planet=
 }
 
-integer res
+local -i res
 
 for child in ${(k)child2parent}; do
   compute_orbit_count $child
   (( res += orbit_counts[$child] ))
 done
 
-echo - $res
+echo -E - $res

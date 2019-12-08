@@ -1,7 +1,9 @@
 #!/usr/bin/env zsh
 
-emulate -L zsh -o err_return -o no_unset
+emulate -L zsh
+setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global warn_nested_var
 
+local -a res
 res=($(./icc <(<&0) <<<'1'))
 (( $#res ))
 echo -E - $res[-1]

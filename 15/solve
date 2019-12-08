@@ -1,11 +1,13 @@
 #!/usr/bin/env zsh
 
-emulate -L zsh -o err_return -o no_unset
+emulate -L zsh
+setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global warn_nested_var
 
 local layer c
 local -i zeros=151 res
+
 while read -rk 150 -u 0 layer; do
-  local -A hist
+  local -A hist=()
   for c in {0..2}; do
     hist[$c]=${#layer//[^$c]}
   done

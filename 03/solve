@@ -1,10 +1,15 @@
 #!/usr/bin/env zsh
 
-emulate -L zsh -o err_return -o no_unset -o ksh_arrays
+emulate -L zsh
+setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global warn_nested_var
+setopt ksh_arrays
 
-IFS=, read -A p
+local -a p
+IFS=, read -rA p
+(( ${#p[@]} > 2 ))
 p[1,2]=(12 2)
 
+local -i i
 for i in {0..${#p[@]}..4}; do
   case ${p[i]} in
     99) break;;

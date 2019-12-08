@@ -1,22 +1,25 @@
 #!/usr/bin/env zsh
 
-emulate -L zsh -o err_return -o no_unset
+emulate -L zsh
+setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global warn_nested_var
 
 zmodload zsh/mathfunc
 
 local -A grid=('0:0' '')
-integer res=-1
+local wire_label segment
+local -a wire_path
+local -i res=-1
 
 for wire_label in first second; do
-  IFS=, read -A wire_path
-  integer x=0 y=0
+  IFS=, read -rA wire_path
+  local -i x=0 y=0
 
   for segment in $wire_path; do
     case $segment in
-      L*) integer dx=-1 dy=0;;
-      R*) integer dx=1  dy=0;;
-      U*) integer dx=0  dy=1;;
-      D*) integer dx=0  dy=-1;;
+      L*) local -i dx=-1 dy=0;;
+      R*) local -i dx=1  dy=0;;
+      U*) local -i dx=0  dy=1;;
+      D*) local -i dx=0  dy=-1;;
        *) return 1;
     esac
     repeat ${segment:1}; do
@@ -25,7 +28,7 @@ for wire_label in first second; do
       if [[ $wire_label == first ]]; then
         grid[$x:$y]=''
       elif [[ -v grid[$x:$y] ]]; then
-        integer dist=$((abs(x) + abs(y)))
+        local -i dist=$((abs(x) + abs(y)))
         (( res >= 0 && res < dist )) || res=$dist
       fi
     done
@@ -33,4 +36,4 @@ for wire_label in first second; do
 done
 
 (( res >= 0 ))
-echo - $res
+echo -E - $res
