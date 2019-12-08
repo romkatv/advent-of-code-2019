@@ -1,21 +1,45 @@
 #!/usr/bin/env zsh
 
 emulate -L zsh
-setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global ksh_arrays
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global ksh_arrays
 
-local -a p
-IFS=, read -rA p
-(( ${#p[@]} > 2 ))
-p[1,2]=(12 2)
+local -r num="(-<0-$((1<<31))>|<0-$((1<<31-1))>)"
 
-local -i i
-for i in {0..${#p[@]}..4}; do
-  case ${p[i]} in
-    99) break;;
-    1) p[p[i+3]]=$((p[p[i+1]] + p[p[i+2]]));;
-    2) p[p[i+3]]=$((p[p[i+1]] * p[p[i+2]]));;
-    *) return 1;;
-  esac
+local -a mem
+IFS=, read -rA mem
+[[ -z "${(@)mem:#$~num}" ]]
+(( ${#mem[@]} > 2 ))
+
+local -i p
+
+function at() {
+  (( $1 >= 0 && $1 < ${#mem[@]} ))
+  unsetopt err_exit
+  return ${mem[$1]}
+}
+functions -M at 1
+
+function store() {
+  local -i pos=at(p++)
+  (( pos >= 0 && pos < ${#mem[@]} ))
+  [[ $1 == $~num ]]
+  mem[pos]=$1
+}
+
+[[ -z "${functions[(I)op_<->]}" ]]
+
+function op_1()  { store $(( at(at(p++)) + at(at(p++)) )) }  # add
+function op_2()  { store $(( at(at(p++)) * at(at(p++)) )) }  # mul
+
+mem[1,2]=(12 2)
+
+while true; do
+  local -i instr=at(p++)
+  (( instr > 0 ))
+  (( instr != 99 )) || break
+  local op=op_$instr
+  (( ${+functions[$op]} ))
+  $op
 done
 
-echo - ${p[0]}
+echo -E - ${mem[0]}
