@@ -1,0 +1,21 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh -o err_return -o no_unset -o extended_glob
+
+local -i i
+local layer img=${(l:150::2:):-}
+while read -rk 150 -u 0 layer; do
+  for i in {1..150}; do
+    if [[ $img[i] == 2 ]]; then
+      img[i]=$layer[i]
+    fi
+  done
+done
+
+[[ $img == [01]# ]]
+
+for i in {1..126..25}; do
+  echo -E - ${${img[i,i+24]//0/ }//1/#} >&2
+done
+
+echo -E - $img
