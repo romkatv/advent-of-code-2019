@@ -5,11 +5,8 @@ setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global
 
 local min max
 IFS=- read -r min max
-[[ $min == <-> && $max == <-> ]]
-
+[[ $min == <100000-999999> && $max == <100000-999999> ]]
 local -i min max
-(( min >= 100000 )) || min=100000
-(( max <= 999999 )) || max=999999
 
 local n
 local -i res
