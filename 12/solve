@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 
 emulate -L zsh
-setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global warn_nested_var
+setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global
 
 local -A child2parent
 local parent child

@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 
 emulate -L zsh
-setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global warn_nested_var
+setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global
 
 local -A child2parent
 local parent child
@@ -15,7 +15,6 @@ local -A orbit_counts
 local first_planet
 
 function compute_orbit_count() {
-  unsetopt warn_nested_var
   [[ ! -v orbit_counts[$1] ]] || return 0
   [[ $1 != $first_planet ]]
   : ${first_planet:=$1}

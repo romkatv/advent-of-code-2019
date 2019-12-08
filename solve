@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 
 emulate -L zsh
-setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global warn_nested_var
+setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global
 setopt pushd_silent prompt_percent no_prompt_subst
 
 (( ARGC )) || set -- ${ZSH_SCRIPT:h}/<->(/:t)
