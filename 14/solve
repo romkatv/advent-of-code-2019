@@ -3,6 +3,8 @@
 emulate -L zsh
 setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global warn_nested_var
 
+zmodload zsh/system
+
 local program
 read -r program
 
@@ -11,16 +13,27 @@ function amp() (
 )
 
 function loop() {
-  local fin fout fdin fdout line
+  local fin fout fdin fdout buf
   {
-    fin="$(mktemp -u)"
-    fout="$(mktemp -u)"
+    fin="$(mktemp -u ${TMPDIR:-/tmp}/aoc-2019.XXXXXXXXXX)"
+    fout="$(mktemp -u ${TMPDIR:-/tmp}/aoc-2019.XXXXXXXXXX)"
     mkfifo $fin $fout
     eval $1 <$fin >$fout &
-    exec {fdin}>$fin {fdout}<$fout
-    while read -ru $fdout line; do
-      echo -E - $line >&1 >&$fdin
-    done
+    {
+      exec {fdin}>$fin {fdout}<$fout
+      while true; do
+        local -i ret=0
+        sysread -i $fdout buf || ret=$?
+        (( ret != 5 )) || break
+        (( ret == 0 ))
+        echo -nE - $buf >&1 >&$fdin
+      done
+    } always {
+      if (( $? )); then
+        kill $!
+        wait $!
+      fi
+    }
     wait $!
   } always {
     rm -f "$fin" "$fout"
