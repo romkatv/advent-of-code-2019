@@ -24,7 +24,7 @@ function fetch() {
   local -i res=at(p++) m='mode % 10'
   (( mode /= 10, 1 ))
   if (( m == 0 )); then
-    (( res = at(res), 1 ))
+    res=at(res)
   else
     (( m == 1 ))
   fi
@@ -36,8 +36,8 @@ functions -M fetch 0
 function store() {
   local -i pos=at(p++)
   (( mode % 10 == 0 ))
-  (( mode /= 10, 1 ))
   (( pos >= 0 && pos < ${#mem[@]} ))
+  (( mode /= 10, 1 ))
   [[ $1 == $~num ]]
   mem[pos]=$1
 }
