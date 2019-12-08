@@ -27,6 +27,8 @@ using ::std::int32_t;
 using ::std::int64_t;
 using ::std::size_t;
 
+static_assert(sizeof(size_t) >= sizeof(int32_t));
+
 std::string ReadProgram(int argc, char** argv) {
   std::string res;
   if (argc == 1) {
@@ -68,6 +70,11 @@ std::vector<int32_t> ParseProgram(std::string_view src) {
   return res;
 }
 
+struct State {
+  std::vector<int32_t> mem;
+  size_t p = 0;
+};
+
 class Arg {
  public:
   template <class R>
@@ -100,7 +107,9 @@ class Arg {
 };
 
 template <class... Args>
-void EvalInstruction(std::vector<int32_t>& mem, size_t& p, void (*f)(Args...)) {
+void EvalInstruction(State& state, void (*f)(Args...)) {
+  auto& mem = state.mem;
+  auto& p = state.p;
   CHECK(p + sizeof...(Args) < mem.size());
   CHECK(mem[p] >= 0);
   int32_t mode = mem[p] / 100;
@@ -110,27 +119,29 @@ void EvalInstruction(std::vector<int32_t>& mem, size_t& p, void (*f)(Args...)) {
   std::apply(f, args);
 }
 
-int32_t Narrow(int64_t n) {
+int32_t To32(int64_t n) {
   CHECK(n >= std::numeric_limits<int32_t>::min());
   CHECK(n <= std::numeric_limits<int32_t>::max());
   return n;
 }
 
-void Op_Add(int32_t a, int32_t b, int32_t* out) { *out = Narrow(int64_t{a} + int64_t{b}); }
-void Op_Mul(int32_t a, int32_t b, int32_t* out) { *out = Narrow(int64_t{a} * int64_t{b}); }
-void Op_Input(int32_t* out) { CHECK(std::cin >> *out); }
-void Op_Output(int32_t a) { CHECK(std::cout << a << '\n'); }
+void Op_In (                      int32_t* out) { CHECK(std::cin >> *out);              }
+void Op_Out(int32_t a                         ) { CHECK(std::cout << a << '\n');        }
+void Op_Add(int32_t a, int32_t b, int32_t* out) { *out = To32(int64_t{a} + int64_t{b}); }
+void Op_Mul(int32_t a, int32_t b, int32_t* out) { *out = To32(int64_t{a} * int64_t{b}); }
 
-void EvalProgram(std::vector<int32_t>& mem) {
-  for (size_t p = 0; p != mem.size();) {
+void Eval(State& state) {
+  auto& mem = state.mem;
+  auto& p = state.p;
+  while (p != mem.size()) {
     CHECK(p < mem.size());
     CHECK(mem[p] >= 0);
     switch (mem[p] % 100) {
+      case 1: EvalInstruction(state, Op_Add); break;
+      case 2: EvalInstruction(state, Op_Mul); break;
+      case 3: EvalInstruction(state, Op_In);  break;
+      case 4: EvalInstruction(state, Op_Out); break;
       case 99: return;
-      case 1: EvalInstruction(mem, p, Op_Add); break;
-      case 2: EvalInstruction(mem, p, Op_Mul); break;
-      case 3: EvalInstruction(mem, p, Op_Input); break;
-      case 4: EvalInstruction(mem, p, Op_Output); break;
       default: CHECK(false);
     }
   }
@@ -140,6 +151,6 @@ void EvalProgram(std::vector<int32_t>& mem) {
 
 int main(int argc, char** argv) {
   std::string src = ReadProgram(argc, argv);
-  std::vector<int32_t> mem = ParseProgram(src);
-  EvalProgram(mem);
+  State state = {ParseProgram(src)};
+  Eval(state);
 }

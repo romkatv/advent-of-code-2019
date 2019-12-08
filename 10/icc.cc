@@ -27,6 +27,8 @@ using ::std::int32_t;
 using ::std::int64_t;
 using ::std::size_t;
 
+static_assert(sizeof(size_t) >= sizeof(int32_t));
+
 std::string ReadProgram(int argc, char** argv) {
   std::string res;
   if (argc == 1) {
