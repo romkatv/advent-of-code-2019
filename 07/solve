@@ -13,7 +13,7 @@ local -i res
 
 for ((n = min; n <= max; ++n)); do
   (( n[6] >= n[5] && n[5] >= n[4] && n[4] >= n[3] && n[3] >= n[2] && n[2] >= n[1] )) || continue
-  [[ $n == *(11|22|33|44|55|66|77|88|99)* ]]                                         || continue
+  [[ $n =~ '(.)\1' ]] || continue
   res+=1
 done
 
