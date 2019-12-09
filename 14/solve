@@ -3,6 +3,8 @@
 emulate -L zsh
 setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global
 
+zmodload zsh/zpty
+
 local program
 read -r program
 
@@ -11,31 +13,19 @@ function amp() (
 )
 
 function loop() {
-  local fin fout fdin fdout line res
-  {
-    fin="$(mktemp -u ${TMPDIR:-/tmp}/aoc-2019.XXXXXXXXXX)"
-    fout="$(mktemp -u ${TMPDIR:-/tmp}/aoc-2019.XXXXXXXXXX)"
-    mkfifo $fin $fout
-    eval $1 <$fin >$fout &
-    {
-      exec {fdin}>$fin {fdout}<$fout
-      while read -ru $fdout line; do
-        echo -E - $line >&$fdin
-        res=$line
-      done
-    } always {
-      if (( $? )); then
-        kill $!
-        wait $!
-      fi
-    }
-    wait $!
-    echo -E - $res
-  } always {
-    rm -f "$fin" "$fout"
-    [[ -z $fdin  ]] || exec {fdin}>&-
-    [[ -z $fdout ]] || exec {fdout}>&-
-  }
+  local REPLY line
+  zpty x "( $1 ) 2>&3 && echo ok" 3>&2
+  trap 'zpty -d x' EXIT
+  zpty -w x 0
+  while true; do
+    zpty -r x line
+    line=${line%$'\r\n'}
+    [[ ! -o xtrace || $line != '+(zpty):'* ]] || continue
+    [[ $line != ok ]] || break
+    [[ $line == <1-> ]]
+    zpty -w x $line
+    echo -E - $line
+  done
 }
 
 local -i res
@@ -43,7 +33,7 @@ local out x
 
 for x in {56789..98765}; do
   [[ $x == [5-9]# && ${#${(us::)x}} == 5 ]] || continue
-  out=$(loop "amp $x[1]$'\n'0 | amp $x[2] | amp $x[3] | amp $x[4] | amp $x[5]")
+  out=${$(loop "amp $x[1] | amp $x[2] | amp $x[3] | amp $x[4] | amp $x[5]")[-1]}
   [[ $out == <1-> ]]
   (( res > out )) || res=out
 done
