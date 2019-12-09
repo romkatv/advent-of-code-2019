@@ -58,7 +58,7 @@ functions -M readnum 0
 
 [[ -z "${functions[(I)op_<->]}" ]]
 
-function op_99() { exit 0                          }  # exit
+function op_99() { exit 0                          }  # halt
 function op_1()  { store $(( fetch() +  fetch() )) }  # add
 function op_2()  { store $(( fetch() *  fetch() )) }  # mul
 function op_3()  { store $(( readnum() ))          }  # in
