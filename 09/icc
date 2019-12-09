@@ -5,7 +5,7 @@ setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global k
 
 (( ARGC == 1 ))
 
-local -r num="(-<0-$((1<<31))>|<0-$((1<<31-1))>)"
+local -r num="(-<0-$((1<<63))>|<0-$((1<<63-1))>)"
 
 local -a mem
 IFS=, read -rA mem <<<$1
@@ -20,26 +20,31 @@ function at() {
 }
 functions -M at 1
 
-function fetch() {
-  local -i res=at(p++) m='mode % 10'
+function argpos() {
+  local -i res
+  case $(( mode % 10 )) in
+    0) res='at(p++)';;
+    1) res='p++';;
+    *) exit 1
+  esac
+  (( res >= 0 && res < 1 << 31 ))
   (( mode /= 10, 1 ))
-  if (( m == 0 )); then
-    res=at(res)
-  else
-    (( m == 1 ))
-  fi
+  unsetopt err_exit
+  return res
+}
+functions -M argpos 0
+
+function fetch() { 
+  local -i res='at(argpos())'
   unsetopt err_exit
   return res
 }
 functions -M fetch 0
 
 function store() {
-  local -i pos=at(p++)
-  (( mode % 10 == 0 ))
-  (( pos >= 0 && pos < ${#mem[@]} ))
-  (( mode /= 10, 1 ))
   [[ $1 == $~num ]]
-  mem[pos]=$1
+  (( mode % 10 != 1 ))
+  mem[$(( argpos() ))]=$1
 }
 
 function readnum() {
