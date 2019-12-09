@@ -1,0 +1,80 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global ksh_arrays
+
+(( ARGC == 1 ))
+
+local -r num="(-<0-$((1<<63))>|<0-$((1<<63-1))>)"
+
+local -a mem
+IFS=, read -rA mem <<<$1
+[[ -z "${(@)mem:#$~num}" ]]
+
+local -i p base mode
+
+function at() {
+  (( $1 >= 0 ))
+  unsetopt err_exit
+  return ${mem[$1]:-0}
+}
+functions -M at 1
+
+function fetch() {
+  local -i res=at(p++) m='mode % 10'
+  case $m in
+    0) res=at(res);;
+    2) res=at(base + res);;
+    *) (( m == 1 ));;
+  esac
+  (( mode /= 10, 1 ))
+  unsetopt err_exit
+  return res
+}
+functions -M fetch 0
+
+function store() {
+  local -i pos=at(p++) m='mode % 10'
+  case $m in
+    2) pos+=base;;
+    *) (( m == 0 ));;
+  esac
+  (( mode /= 10, 1 ))
+  (( pos >= 0 && pos < 1 << 31 ))
+  [[ $1 == $~num ]]
+  mem[pos]=$1
+}
+
+function readnum() {
+  local res
+  read -r res
+  [[ $res == $~num ]]
+  unsetopt err_exit
+  return res
+}
+functions -M readnum 0
+
+function jumpc() { (( $1 )) || p=$2 }
+
+[[ -z "${functions[(I)op_<->]}" ]]
+
+function op_99() { exit 0                               }  # exit
+function op_9()  { base+=$(( fetch() ))                 }  # rel
+function op_1()  { store $(( fetch() +  fetch() ))      }  # add
+function op_2()  { store $(( fetch() *  fetch() ))      }  # mul
+function op_7()  { store $(( fetch() <  fetch() ))      }  # lt
+function op_8()  { store $(( fetch() == fetch() ))      }  # eq
+function op_5()  { jumpc $(( !fetch() )) $(( fetch() )) }  # jnz
+function op_6()  { jumpc $((  fetch() )) $(( fetch() )) }  # jz
+function op_3()  { store $(( readnum() ))               }  # in
+function op_4()  { echo -E - $(( fetch() ))             }  # out
+
+while true; do
+  local -i instr=at(p++)
+  (( instr > 0 ))
+  mode='instr / 100'
+  local op=op_$((instr % 100))
+  (( ${+functions[$op]} ))
+  $op
+  (( mode == 0 ))
+done
