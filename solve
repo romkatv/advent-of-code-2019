@@ -11,7 +11,6 @@ for task; do
   [[ $task == <-> ]]
   pushd ${ZSH_SCRIPT:h}/$task
   print -rP -- "Solving %B$task%b..." >&2
-  [[ ! -e Makefile ]] || make
   ./solve <input >answer
   print -rP -- "Answer for %B$task%b: %F{green}${(V)$(<answer)//\%//%%}%f" >&2
   popd
