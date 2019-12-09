@@ -1,0 +1,6 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global
+
+./icc "$(<&0)" <<<'2'
