@@ -14,7 +14,7 @@ local -i res
 local out x
 
 for x in {01234..43210}; do
-  [[ $x == [0-4]# && ${#${(us::)x}} == 5 ]] || continue
+  [[ ${(j::)${(os::)x}} == 01234 ]] || continue
   out=$(<<<0 amp $x[1] | amp $x[2] | amp $x[3] | amp $x[4] | amp $x[5])
   [[ $out == <1-> ]]
   (( res > out )) || res=out

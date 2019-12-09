@@ -32,7 +32,7 @@ local -i res
 local out x
 
 for x in {56789..98765}; do
-  [[ $x == [5-9]# && ${#${(us::)x}} == 5 ]] || continue
+  [[ ${(j::)${(os::)x}} == 56789 ]] || continue
   out=${$(loop "amp $x[1] | amp $x[2] | amp $x[3] | amp $x[4] | amp $x[5]")[-1]}
   [[ $out == <1-> ]]
   (( res > out )) || res=out
