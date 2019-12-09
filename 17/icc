@@ -11,7 +11,7 @@ local -a mem
 IFS=, read -rA mem <<<$1
 [[ -z "${(@)mem:#$~num}" ]]
 
-local -i p base modes
+local -i p base mode
 
 function at() {
   (( $1 >= 0 ))
@@ -20,37 +20,32 @@ function at() {
 }
 functions -M at 1
 
-function mode() {
-  local -i res='modes % 10'
-  (( modes /= 10, 1 ))
+function argpos() {
+  local -i res
+  case $(( mode % 10 )) in
+    0) res='at(p++)';;
+    1) res='p++';;
+    2) res='base + at(p++)';;
+    *) exit 1
+  esac
+  (( res >= 0 && res < 1 << 31 ))
+  (( mode /= 10, 1 ))
   unsetopt err_exit
   return res
 }
-functions -M mode 0
+functions -M argpos 0
 
-function fetch() {
-  local -i res
-  case $(( mode() )) in
-    0) res='at(at(p++))';;
-    1) res='at(p++)';;
-    2) res='at(base + at(p++))';;
-    *) exit 1;;
-  esac
+function fetch() { 
+  local -i res='at(argpos())'
   unsetopt err_exit
   return res
 }
 functions -M fetch 0
 
 function store() {
-  local -i pos
-  case $(( mode() )) in
-    0) pos='at(p++)';;
-    2) pos='base + at(p++)';;
-    *) exit 1
-  esac
-  (( pos >= 0 && pos < 1 << 31 ))
   [[ $1 == $~num ]]
-  mem[pos]=$1
+  (( mode % 10 != 1 ))
+  mem[$(( argpos() ))]=$1
 }
 
 function readnum() {
@@ -80,9 +75,9 @@ function op_4()  { echo -E - $(( fetch() ))             }  # out
 while true; do
   local -i instr=at(p++)
   (( instr > 0 ))
-  modes='instr / 100'
+  mode='instr / 100'
   local op=op_$((instr % 100))
   (( ${+functions[$op]} ))
   $op
-  (( modes == 0 ))
+  (( mode == 0 ))
 done
