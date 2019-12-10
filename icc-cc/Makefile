@@ -1,2 +1,2 @@
 icc: Makefile icc.cc
-	g++ -O2 -std=c++17 -Wno-return-type -o icc icc.cc
+	g++ -DNDEBUG -O3 -std=c++17 -o icc icc.cc
