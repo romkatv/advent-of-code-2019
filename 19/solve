@@ -16,6 +16,7 @@ for ((y = 1; ; ++y)); do
     ay+=$y
   done
   read -r line || break
+  (( $#line == width ))
 done
 
 for s in {1..$#ax}; do

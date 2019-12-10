@@ -3,50 +3,71 @@
 emulate -L zsh
 setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
 
-local -i x y s a v sx sy vc
-local line ax=() ay=() ad=()
-read -r line
-local -ri width=$#line
+local -ri bet=200
+local ax=() ay=()  # asteroid coordinates
 
-for ((y = 1; ; ++y)); do
-  for x in {1..$width}; do
-    [[ $line[x] != '.' ]] || continue
-    [[ $line[x] == '#' ]]
-    ax+=$x
-    ay+=$y
-  done
-  read -r line || break
-done
-
-(( $#ax > 200 ))
-
-for s in {1..$#ax}; do
-  local vx=() vy=()
-  for a in {1..$#ax}; do
-    (( a != s )) || continue
-    x=$((ax[a] - ax[s]))
-    y=$((ay[a] - ay[s]))
-    for ((v = 1; v <= $#vx; ++v)); do
-      (( x * vy[v] != y * vx[v] || x * vx[v] < 0 || y * vy[v] < 0 )) || break
+# Read input data (map of all of asteroids).
+() {
+  local line
+  read -r line
+  local -i width=$#line x y
+  for ((y = 1; ; ++y)); do
+    for x in {1..$width}; do
+      [[ $line[x] != '.' ]] || continue
+      [[ $line[x] == '#' ]]
+      ax+=$x
+      ay+=$y
     done
-    (( v > $#vx )) || continue
-    vx+=$x
-    vy+=$y
+    read -r line || break
+    (( $#line == width ))
   done
-  (( $#vx > vc )) || continue
-  vc=$#vx
-  sx=ax[s]
-  sy=ay[s]
-done
+}
 
-(( vc > 0 ))
+(( $#ax == $#ay && $#ax > bet ))
 
-for a in {1..$#ax}; do
-  (( ax[a] -= sx, 1 ))
-  (( ay[a] -= sy, 1 ))
-  ad+=$((ax[a] * ax[a] + ay[a] * ay[a]))
-done
+local -i sx sy  # station coordinates
 
+# Find the optimal location for the observation station.
+() {
+  local -i s a v vc
+  for s in {1..$#ax}; do
+    local vx=() vy=()
+    for a in {1..$#ax}; do
+      (( a != s )) || continue
+      local -i x=$((ax[a] - ax[s]))
+      local -i y=$((ay[a] - ay[s]))
+      for ((v = 1; v <= $#vx; ++v)); do
+        (( x * vy[v] != y * vx[v] || x * vx[v] < 0 || y * vy[v] < 0 )) || break
+      done
+      (( v > $#vx )) || continue
+      vx+=$x
+      vy+=$y
+    done
+    (( $#vx > vc )) || continue
+    vc=$#vx
+    sx=ax[s]
+    sy=ay[s]
+  done
+}
+
+(( sx > 0 && sx <= $#ax && sy > 0 && sy <= $#ay ))
+
+local ad=()  # squared distance from the station to asteroids
+
+# Translate asteroid coordinates so that station is at (0, 0) and compute distances.
+() {
+  local -i i
+  for i in {1..$#ax}; do
+    (( ax[i] -= sx, 1 ))
+    (( ay[i] -= sy, 1 ))
+    ad+=$((ax[i] * ax[i] + ay[i] * ay[i]))
+  done
+}
+
+(( $#ad == $#ax ))
+
+# rot(i, j) < rot(j, i) => the giant laser will reach asteroid i before j.
+# rot(i, j) == rot(i, j) => one of the asteroids is behind the other or they are identical.
 function rot() {
   local -i x=ax[$1] y=ay[$1] res
   if (( x < 0 )); then
@@ -64,6 +85,11 @@ function rot() {
 }
 functions -M rot 2
 
+# lt(i, j) == the giant laser will reach asteroid i before j
+#             OR
+#             it'll reach them at the same time (angle wise) AND i is closer than j
+#
+# N.B.: This is strict weak order.
 function lt() {
   local -i n=$((rot($1, $2)))
   local -i m=$((rot($2, $1)))
@@ -73,38 +99,45 @@ function lt() {
 }
 functions -M lt 2
 
-local tmp
-local -i i j
-for ((i = 1; i <= $#ax; ++i)); do
-  for ((j = i + 1; j <= $#ax; ++j)); do
-    if (( lt(j, i) )); then
-      tmp=$ax[i]; ax[i]=$ax[j]; ax[j]=$tmp
-      tmp=$ay[i]; ay[i]=$ay[j]; ay[j]=$tmp
-      tmp=$ad[i]; ad[i]=$ad[j]; ad[j]=$tmp
-    fi
+# Sort asteroids with respect to `lt`.
+() {
+  local tmp
+  local -i i j
+  for ((i = 1; i <= $#ax; ++i)); do
+    for ((j = i + 1; j <= $#ax; ++j)); do
+      if (( lt(j, i) )); then
+        tmp=$ax[i]; ax[i]=$ax[j]; ax[j]=$tmp
+        tmp=$ay[i]; ay[i]=$ay[j]; ay[j]=$tmp
+        tmp=$ad[i]; ad[i]=$ad[j]; ad[j]=$tmp
+      fi
+    done
   done
-done
+}
 
 (( ax[1] == 0 && ay[1] == 0 && ad[1] == 0 ))
 shift 1 ax ay ad
 
-local -i killed
-while true; do
-  local ax2=() ay2=() ad2=()
-  local -i d=0
-  for i in {1..$#ax}; do
-    if (( d && rot(i, d) == rot(d, i) )); then
-      ax2+=$ax[i]
-      ay2+=$ay[i]
-      ad2+=$ad[i]
-    elif (( ++killed == 200 )); then
-      echo -E - $((100 * (ax[i] + sx - 1) + (ay[i] + sy - 1)))
-      exit
-    else
-      d=i
-    fi
+# Vaporize!
+() {
+  local -i num_destroyed i
+  while true; do
+    (( $#ax ))
+    local -i d=0
+    local ax2=() ay2=() ad2=()  # asteroids surviving the current rotation
+    for i in {1..$#ax}; do
+      if (( d && rot(i, d) == rot(d, i) )); then
+        ax2+=$ax[i]
+        ay2+=$ay[i]
+        ad2+=$ad[i]
+      elif (( ++num_destroyed == bet )); then
+        echo -E - $((100 * (ax[i] + sx - 1) + (ay[i] + sy - 1)))
+        exit
+      else
+        d=i
+      fi
+    done
+    ax=($ax2)
+    ay=($ay2)
+    ad=($ad2)
   done
-  ax=($ax2)
-  ay=($ay2)
-  ad=($ad2)
-done
+}
