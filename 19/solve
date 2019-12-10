@@ -1,0 +1,37 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global
+
+local -i x y s a v res
+local line ax=() ay=()
+read -r line
+local -ri width=$#line
+
+for ((y = 1; ; ++y)); do
+  for x in {1..$width}; do
+    [[ $line[x] != '.' ]] || continue
+    [[ $line[x] == '#' ]]
+    ax+=$x
+    ay+=$y
+  done
+  read -r line || break
+done
+
+for s in {1..$#ax}; do
+  local vx=() vy=()
+  for a in {1..$#ax}; do
+    (( a != s )) || continue
+    x=$((ax[a] - ax[s]))
+    y=$((ay[a] - ay[s]))
+    for ((v = 1; v <= $#vx; ++v)); do
+      (( x * vy[v] != y * vx[v] || x * vx[v] < 0 || y * vy[v] < 0 )) || break
+    done
+    (( v > $#vx )) || continue
+    vx+=$x
+    vy+=$y
+  done
+  (( res > $#vx )) || res=$#vx
+done
+
+echo -E - $res
