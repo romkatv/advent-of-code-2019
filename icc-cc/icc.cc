@@ -27,7 +27,7 @@ static void run(void (*op)(Ts...)) {
     }
     if (mem.size() <= args[i]) mem.resize(args[i] << 1);
   }
-  std::apply([=](auto... pos) { op(mem[pos]...); },  args);
+  std::apply([=](auto... pos) { op(mem[pos]...); }, args);
 }
 
 int main(int argc, char** argv) {
