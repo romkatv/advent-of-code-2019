@@ -1,0 +1,70 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
+
+zmodload zsh/zpty
+
+local -A white=(0:0 1)
+local -i x y dx=0 dy=-1
+
+function turn() {
+  dx=$(($1 * $3 + $2 * $4))
+  dy=$(($1 * $5 + $2 * $6))
+}
+
+function next() {
+  local line
+  while true; do
+    zpty -r z line
+    line=${line%$'\r\n'}
+    [[ ! -o xtrace || $line != '+(zpty):'* ]] || continue
+    if [[ $line != <0-1> ]]; then
+      [[ $line == ok ]]
+      line=-1
+    fi
+    unsetopt err_exit
+    return line
+  done
+}
+functions -M next 0
+
+local REPLY
+zpty z "./icc ${(q)$(<&0)} 2>&3 && echo ok" 3>&2
+trap 'zpty -d z' EXIT
+
+while true; do
+  zpty -w z ${white[$x:$y]:-0}
+  case $((next())) in
+    -1) break;;
+     0) unset "white[$x:$y]";;
+     1) white[$x:$y]=1;;
+     *) exit 1;
+  esac
+  case $((next())) in
+    0) turn $dx $dy 0  1 -1 0;;
+    1) turn $dx $dy 0 -1  1 0;;
+    *) exit 1;
+  esac
+  x+=dx
+  y+=dy
+done
+
+local xy
+local -i xmin xmax ymin ymax
+for xy in ${(k)white}; do
+  x=${xy%:*}
+  y=${xy#*:}
+  (( xmin < x )) || xmin=x
+  (( xmax > x )) || xmax=x
+  (( ymin < y )) || ymin=y
+  (( ymax > y )) || ymax=y
+done
+
+for y in {$ymin..$ymax}; do
+  for x in {$xmin..$xmax}; do
+    echo -nE - ${white[$x:$y]:-0}         >&1
+    echo -nE - ${${white[$x:$y]:+'#'}:- } >&2
+  done
+  echo >&2
+done
