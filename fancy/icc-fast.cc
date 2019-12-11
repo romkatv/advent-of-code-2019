@@ -1,3 +1,5 @@
+// Fast implementation of Intcode Computer in C++.
+//
 // Compile: g++ -std=c++17 -O3 -o icc-fast icc-fast.cc
 // Usage: icc-fast <intcode>
 //
