@@ -34,8 +34,8 @@ functions -M gcd 2
 local c
 local -i i j iter res=1
 for c in $coords; do
-  local start="${(P)c} ${(P)${:-d$c}}"
   for ((iter = 1;; ++iter)); do
+    local -i moving=0
     for i in {1..$((n - 1))}; do
       for j in {$((i + 1))..$n}; do
         case $((${c}[i] - ${c}[j])) in
@@ -43,13 +43,14 @@ for c in $coords; do
           <1->) (( --d${c}[i], ++d${c}[j], 1 ));;
         esac
       done
+      (( moving = moving || d${c}[i], 1 ))
     done
+    (( moving )) || break
     for i in {1..$n}; do
       (( ${c}[i] += d${c}[i], 1 ))
     done
-    [[ "${(P)c} ${(P)${:-d$c}}" != $start ]] || break
   done
   (( res = (res * iter) / gcd(res, iter) ))
 done
 
-echo -E - $res
+echo -E - $((2 * res))
