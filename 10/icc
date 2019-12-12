@@ -5,11 +5,9 @@ setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global k
 
 (( ARGC == 1 ))
 
-local -r num="((-|)<0-$((1<<63-1))>)"
-
 local -a mem
 IFS=, read -rA mem <<<$1
-[[ -z "${(@)mem:#$~num}" ]]
+[[ -z "${(@)mem:#(|-)<->}" ]]
 
 local -i p mode
 
@@ -42,7 +40,7 @@ function fetch() {
 functions -M fetch 0
 
 function store() {
-  [[ $1 == $~num ]]
+  [[ $1 == (|-)<-> ]]
   (( mode % 10 != 1 ))
   mem[$(( argpos() ))]=$1
 }
@@ -50,7 +48,7 @@ function store() {
 function readnum() {
   local res
   read -r res
-  [[ $res == $~num ]]
+  [[ $res == (|-)<-> ]]
   unsetopt err_exit
   return res
 }

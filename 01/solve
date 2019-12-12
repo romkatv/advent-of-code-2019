@@ -3,14 +3,12 @@
 emulate -L zsh
 setopt no_aliases err_return no_unset extended_glob pipe_fail warn_create_global
 
-zmodload zsh/mathfunc
-
 local n
 local -i res
 
 while read -r n; do
-  [[ $n == <1-1000000> ]]
-  (( abs(res += n / 3 - 2) < 1 << 31 ))
+  [[ $n == <-> ]]
+  res+='n / 3 - 2'
 done
 
 echo - $res

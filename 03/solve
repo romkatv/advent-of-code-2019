@@ -3,11 +3,9 @@
 emulate -L zsh
 setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global ksh_arrays
 
-local -r num="(-<0-$((1<<31))>|<0-$((1<<31-1))>)"
-
 local -a mem
 IFS=, read -rA mem
-[[ -z "${(@)mem:#$~num}" ]]
+[[ -z "${(@)mem:#(|-)<->}" ]]
 (( ${#mem[@]} > 2 ))
 
 local -i p
@@ -22,7 +20,7 @@ functions -M at 1
 function store() {
   local -i pos=at(p++)
   (( pos >= 0 && pos < ${#mem[@]} ))
-  [[ $1 == $~num ]]
+  [[ $1 == (|-)<-> ]]
   mem[pos]=$1
 }
 
