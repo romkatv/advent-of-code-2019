@@ -1,0 +1,55 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
+
+local -ra coords=(x y z)
+local -a $coords d$^coords match
+local -i n
+
+local line
+while read -r line; do
+  [[ $line == (#b)'<x='((|-)<->)', y='((|-)<->)', z='((|-)<->)'>' ]]
+  x+=$match[1]
+  y+=$match[3]
+  z+=$match[5]
+  dx+=0
+  dy+=0
+  dz+=0
+  n+=1
+done
+
+(( n ))
+
+function gcd() {
+  local -i a=$1 b=$2 tmp
+  while (( b )); do
+    (( tmp = b, b = a % b, a = tmp, 1 ))
+  done
+  unsetopt err_exit
+  return a
+}
+functions -M gcd 2
+
+local c
+local -i i j iter res=1
+for c in $coords; do
+  local start="${(P)c} ${(P)${:-d$c}}"
+  for ((iter = 1;; ++iter)); do
+    for i in {1..$((n - 1))}; do
+      for j in {$((i + 1))..$n}; do
+        case $((${c}[i] - ${c}[j])) in
+          -*)   (( ++d${c}[i], --d${c}[j], 1 ));;
+          <1->) (( --d${c}[i], ++d${c}[j], 1 ));;
+        esac
+      done
+    done
+    for i in {1..$n}; do
+      (( ${c}[i] += d${c}[i], 1 ))
+    done
+    [[ "${(P)c} ${(P)${:-d$c}}" != $start ]] || break
+  done
+  (( res = (res * iter) / gcd(res, iter) ))
+done
+
+echo -E - $res
