@@ -66,24 +66,23 @@ local ad=()  # squared distance from the station to asteroids
 
 (( $#ad == $#ax ))
 
-# rot(i, j) < rot(j, i) => the giant laser will reach asteroid i before j.
-# rot(i, j) == rot(i, j) => one of the asteroids is behind the other or they are identical.
-function rot() {
-  local -i x=ax[$1] y=ay[$1] res
-  if (( x < 0 )); then
-    (( x *= -1, 1 ))
-    (( y *= -1, 1 ))
-    res+=2
+# cmp(i, j) <  0  => the giant laser will reach asteroid i before j.
+# cmp(i, j) >  0  => the giant laser will reach asteroid i after j.
+# rot(i, j) == 0 => one of the asteroids is behind the other or they are identical.
+function cmp() {
+  local -i i=$1 j=$2 res
+  if (( (ax[i] < 0) != (ax[j] < 0) )); then
+    res=$(( ax[i] < 0 ? 1 : -1 ))
+  elif (( ax[i] == 0 && ax[j] == 0 )); then
+    res=$(( ay[i] * ay[j] >= 0 ? 0 : ay[i] < 0 ? -1 : 1 ))
+  else
+    local -i c=$(( ax[j] * ay[i] - ax[i] * ay[j] ))
+    res=$(( c == 0 ? 0 : c < 0 ? -1 : 1 ))
   fi
-  if (( y > 0 )); then
-    x=y
-    res+=1
-  fi
-  res=$((ad[$2] * (res * ad[$1] + x * x)))
   unsetopt err_exit
   return res
 }
-functions -M rot 2
+functions -M cmp 2
 
 # lt(i, j) == the giant laser will reach asteroid i before j
 #             OR
@@ -91,9 +90,8 @@ functions -M rot 2
 #
 # N.B.: This is strict weak order.
 function lt() {
-  local -i n=$((rot($1, $2)))
-  local -i m=$((rot($2, $1)))
-  local -i res=$((n < m || (n == m && ad[$1] < ad[$2])))
+  local -i c=$((cmp($1, $2)))
+  local -i res=$((c < 0 || (c == 0 && ad[$1] < ad[$2])))
   unsetopt err_exit
   return res
 }
@@ -125,7 +123,7 @@ shift 1 ax ay ad
     local -i d=0
     local ax2=() ay2=() ad2=()  # asteroids surviving the current rotation
     for i in {1..$#ax}; do
-      if (( d && rot(i, d) == rot(d, i) )); then
+      if (( d && cmp(i, d) == 0 )); then
         ax2+=$ax[i]
         ay2+=$ay[i]
         ad2+=$ad[i]
