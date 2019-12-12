@@ -1,0 +1,56 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
+
+zmodload zsh/mathfunc
+
+local -ra coords=(x y z)
+local -a $coords d$^coords match
+local -i n
+
+local line
+while read -r line; do
+  [[ $line == (#b)'<x='((|-)<->)', y='((|-)<->)', z='((|-)<->)'>' ]]
+  x+=$match[1]
+  y+=$match[3]
+  z+=$match[5]
+  dx+=0
+  dy+=0
+  dz+=0
+  n+=1
+done
+
+(( n ))
+
+local c
+local -i i j
+repeat 1000; do
+  for i in {1..$((n - 1))}; do
+    for j in {$((i + 1))..$n}; do
+      for c in $coords; do
+        case $((${c}[i] - ${c}[j])) in
+          -*)   (( ++d${c}[i], --d${c}[j], 1 ));;
+          <1->) (( --d${c}[i], ++d${c}[j], 1 ));;
+        esac
+      done
+    done
+  done
+  for i in {1..$n}; do
+    for c in $coords; do
+      (( ${c}[i] += d${c}[i], 1 ))
+    done
+  done
+done
+
+local -i res
+for i in {1..$n}; do
+  local -i pot=0 kin=0
+  for c in $coords; do
+    (( pot += abs(${c}[i]), 1 ))
+    (( kin += abs(d${c}[i]), 1 ))
+  done
+  (( res += pot * kin, 1 ))
+done
+
+echo -E - $res
