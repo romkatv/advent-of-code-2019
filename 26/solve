@@ -1,0 +1,66 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
+
+zmodload zsh/zpty
+
+local program
+read -r program
+[[ $program == <->,* ]]
+
+local REPLY
+zpty z "./icc 2${(q)program#<->} $'in\n' 2>&3 && echo ok" 3>&2
+trap 'zpty -d z' EXIT
+
+function next() {
+  local line
+  while true; do
+    zpty -r z line
+    line=${line%$'\r\n'}
+    [[ ! -o xtrace || $line != '+(zpty):'* ]] || continue
+    typeset -g $1=$line
+    if [[ $line == ok ]]; then
+      unsetopt err_exit
+      return 1
+    fi
+    return 0
+  done
+}
+
+local x y tile
+local -i paddle=-1 ball=-1 score=-1
+
+while next x; do
+  case $x in
+    in)
+      (( paddle >= 0 && ball >= 0 ))
+      if (( ball < paddle )); then
+        zpty -w z -1
+      elif (( ball > paddle )); then
+        zpty -w z  1
+      else
+        zpty -w z  0
+      fi
+    ;;
+    -1)
+      next y
+      next z
+      [[ $y == 0 && $z == <-> ]]
+      (( z >= score ))
+      score=z
+    ;;
+    *)
+      next y
+      next tile
+      [[ $x == <-> && $y == <-> && $tile == <0-4> ]]
+      case $tile in
+        3) paddle=x;;
+        4) ball=x;;
+      esac
+    ;;
+  esac
+done
+
+(( score > 0 ))
+echo -E - $score
