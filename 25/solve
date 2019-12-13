@@ -1,0 +1,18 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
+
+local -A screen
+
+local x y t
+./icc "$(<&0)" | while true; do
+  read -r x || break
+  read -r y
+  read -r t
+  [[ $x == <-> && $y == <-> && $t == <0-4> ]]
+  screen[$x:$y]=$t
+done
+
+typeset screen >&2
+echo -E - ${#${(M)screen:#2}}
