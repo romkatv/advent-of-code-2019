@@ -3,12 +3,13 @@
 emulate -L zsh
 setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global ksh_arrays
 
-(( ARGC == 1 ))
+[[ $# == (1|2) ]]
 
 local -a mem
 IFS=, read -rA mem <<<$1
 [[ -z "${(@)mem:#(|-)<->}" ]]
 
+local prompt=${2:-}
 local -i p base mode
 
 function at() {
@@ -48,6 +49,7 @@ function store() {
 
 function readnum() {
   local res
+  echo -nE - $prompt
   read -r res
   [[ $res == (|-)<-> ]]
   unsetopt err_exit
