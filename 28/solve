@@ -1,0 +1,59 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
+
+local -ri stash=1000000000000
+local -A reactions
+
+() {
+  local line match=() mbegin=() mend=()
+  while read -r line; do
+    [[ $line == (#b)(<1->' '[A-Z]##(', '<1->' '[A-Z]##)#)' => '(<1->)' '([A-Z]##) ]]
+    [[ ! -v reactions[$match[4]] && ! -v stock[$match[4]] ]]
+    reactions[$match[4]]="$match[3] ${match[1]//,}"
+  done
+}
+
+function consume() {
+  local -i count=$1
+  local chemical=$2
+  if [[ $chemical == ORE ]]; then
+    (( ore += count ))
+    return
+  fi
+  count=$((stock[$chemical] -= count))
+  (( count < 0 )) || return 0
+  local reaction=(${=reactions[$chemical]})
+  local -i n=$(((reaction[1] - count - 1) / reaction[1]))
+  count=$((stock[$chemical] += n * reaction[1]))
+  (( count >= 0 && count < reaction[1] ))
+  for count chemical in ${reaction:1}; do
+    consume $((n * count)) $chemical
+  done
+}
+
+function cost() {
+  local -i ore=0
+  local -A stock=()
+  consume $1 FUEL
+  unsetopt err_exit
+  return ore
+}
+functions -M cost 1
+
+local -i ub=1
+while (( cost(ub) < stash )) (( ub *= 2 ))
+local -i lb=$((ub / 2))
+
+while (( lb + 1 != ub )); do
+  (( lb < ub ))
+  local -i m=$((lb + (ub - lb) / 2))
+  if (( cost(m) < stash )); then
+    lb=m
+  else
+    ub=m
+  fi
+done
+
+echo -E - $lb
