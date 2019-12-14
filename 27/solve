@@ -1,0 +1,39 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
+
+local -A reactions stock
+
+() {
+  local line match=() mbegin=() mend=()
+  while read -r line; do
+    [[ $line == (#b)(<1->' '[A-Z]##(', '<1->' '[A-Z]##)#)' => '(<1->)' '([A-Z]##) ]]
+    [[ ! -v reactions[$match[4]] && ! -v stock[$match[4]] ]]
+    reactions[$match[4]]="$match[3] ${match[1]//,}"
+    stock[$match[4]]=0
+  done
+}
+
+local -i res
+
+function consume() {
+  local -i count=$1
+  local chemical=$2
+  if [[ $chemical == ORE ]]; then
+    (( res += count ))
+    return
+  fi
+  count=$((stock[$chemical] -= count))
+  (( count < 0 )) || return 0
+  local reaction=(${=reactions[$chemical]})
+  local -i n=$(((reaction[1] - count - 1) / reaction[1]))
+  count=$((stock[$chemical] += n * reaction[1]))
+  (( count >= 0 && count < reaction[1] ))
+  for count chemical in ${reaction:1}; do
+    consume $((n * count)) $chemical
+  done
+}
+
+consume 1 FUEL
+echo -E - $res
