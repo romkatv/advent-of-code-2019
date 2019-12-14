@@ -14,5 +14,4 @@ local x y t
   screen[$x:$y]=$t
 done
 
-typeset screen >&2
 echo -E - ${#${(M)screen:#2}}
