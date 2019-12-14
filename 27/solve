@@ -3,7 +3,7 @@
 emulate -L zsh
 setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
 
-local -A reactions stock
+local -A reactions
 
 () {
   local line match=() mbegin=() mend=()
@@ -11,11 +11,11 @@ local -A reactions stock
     [[ $line == (#b)(<1->' '[A-Z]##(', '<1->' '[A-Z]##)#)' => '(<1->)' '([A-Z]##) ]]
     [[ ! -v reactions[$match[4]] && ! -v stock[$match[4]] ]]
     reactions[$match[4]]="$match[3] ${match[1]//,}"
-    stock[$match[4]]=0
   done
 }
 
 local -i res
+local -A stock
 
 function consume() {
   local -i count=$1
