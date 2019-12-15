@@ -12,47 +12,39 @@
 emulate -L zsh -o ksh_arrays
 
 local -a mem
-IFS=, read -rA mem <<<${1:?usage: icc.zsh <intcode>}
+local -i pc base mode REPLY
 
-local -i p base mode
+IFS=, read -rA mem <<<${1:?usage: icc.zsh <intcode>}
 
 function argpos() {
   local -i m='mode % 10'
   (( mode /= 10 ))
   case $m in
-    1) return 'p++';;
-    0) return 'mem[p++]';;
-    2) return 'mem[p++] + base';;
+    1) return 'pc++'            ;;
+    0) return 'mem[pc++]'       ;;
+    2) return 'mem[pc++] + base';;
   esac
 }
+
+function fetch() { (( mem[argpos()]          )) }
+function store() { (( mem[argpos()]=$1       )) }
+function jumpc() { (( pc += ($1) * ($2 - pc) )) }
+
 functions -M argpos 0
-
-function fetch() { return 'mem[argpos()]' }
-functions -M fetch 0
-
-function store() { mem[$(( argpos() ))]=$1 }
-
-function readnum() {
-  local res
-  read -r res
-  return res
-}
-functions -M readnum 0
-
-function jumpc() { (( $1 )) || p=$2 }
-
-function op_99() { exit 0                               }  # hlt
-function op_9()  { base+=$(( fetch() ))                 }  # rel
-function op_1()  { store $(( fetch() +  fetch() ))      }  # add
-function op_2()  { store $(( fetch() *  fetch() ))      }  # mul
-function op_7()  { store $(( fetch() <  fetch() ))      }  # lt
-function op_8()  { store $(( fetch() == fetch() ))      }  # eq
-function op_5()  { jumpc $(( !fetch() )) $(( fetch() )) }  # jnz
-function op_6()  { jumpc $((  fetch() )) $(( fetch() )) }  # jz
-function op_3()  { store $(( readnum() ))               }  # in
-function op_4()  { echo - $(( fetch() ))                }  # out
+functions -M fetch  0
 
 while true; do
-  mode='mem[p] / 100'
-  op_$((mem[p++] % 100))
+  mode='mem[pc] / 100'
+  case $((mem[pc++] % 100)); in
+    99) exit 0                        ;;  # hlt
+     9) base+='fetch()'               ;;  # rel
+     1) store 'fetch() +  fetch()'    ;;  # add
+     2) store 'fetch() *  fetch()'    ;;  # mul
+     7) store 'fetch() <  fetch()'    ;;  # lt
+     8) store 'fetch() == fetch()'    ;;  # eq
+     5) jumpc 'fetch() != 0' 'fetch()';;  # jnz
+     6) jumpc 'fetch() == 0' 'fetch()';;  # jz
+     3) read -r; store REPLY          ;;  # in
+     4) echo - $((fetch()))           ;;  # out
+  esac
 done
