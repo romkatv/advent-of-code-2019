@@ -17,8 +17,10 @@ function next() {
     [[ -o xtrace && $line == '+(zpty):'* ]] || break
   done
   [[ $line == (-|)<-> ]]
-  typeset -g $1=$line
+  unsetopt err_exit
+  return line
 }
+functions -M next 0
 
 function flip() {
   unsetopt err_exit
@@ -40,17 +42,16 @@ function move() {
 }
 
 function sprint() {
-  local d r
+  local d
   for d; do
     zpty -w z $d
-    next r
-    (( r == 1 ))
+    [[ $((next())) == (1|2) ]]
     move $d
   done
 }
 
 local -i res
-local MATCH d r path=() queue=('')
+local MATCH d path=() queue=('')
 
 while true; do
   (( $#queue ))
@@ -65,15 +66,14 @@ while true; do
     move $d
     if [[ ! -v grid[$x:$y] ]]; then
       zpty -w z $d
-      next r
+      local -i r='next()'
       grid[$x:$y]=$r
       case $r in
         0);;
         1)
           queue+="$path $d"
           zpty -w z $((flip(d)))
-          next r
-          (( r == 1 ))
+          (( next() == 1 ))
         ;;
         2)
           echo -E - $((res + $#path + 1))
