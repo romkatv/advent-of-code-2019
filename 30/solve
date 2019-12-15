@@ -1,0 +1,109 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
+
+zmodload zsh/zpty
+
+local REPLY
+zpty z "./icc ${(q)$(<&0)} 2>&3" 3>&2
+trap 'zpty -d z' EXIT
+
+function next() {
+  local line
+  while true; do
+    zpty -r z line
+    line=${line%$'\r\n'}
+    [[ -o xtrace && $line == '+(zpty):'* ]] || break
+  done
+  [[ $line == (-|)<-> ]]
+  typeset -g $1=$line
+}
+
+function flip() {
+  unsetopt err_exit
+  return $(($1 % 2 ? $1 + 1 : $1 - 1))
+}
+functions -M flip 1
+
+local -A grid=('0:0' 1)
+local -i x y
+
+function move() {
+  case $1 in
+    1) (( --y, 1 ));;
+    2) (( ++y, 1 ));;
+    3) (( --x, 1 ));;
+    4) (( ++x, 1 ));;
+    *) exit 1;;
+  esac
+}
+
+function sprint() {
+  local d r
+  for d; do
+    zpty -w z $d
+    next r
+    (( r == 1 || r == 2 ))
+    move $d
+  done
+}
+
+local -i ox oy
+local MATCH d r path=() queue=('')
+
+while (( $#queue )); do
+  path=(${=queue[1]})
+  shift 1 queue
+  sprint $path
+  (( $#queue )) || path=()
+  for d in {1..4}; do
+    move $d
+    if [[ ! -v grid[$x:$y] ]]; then
+      zpty -w z $d
+      next r
+      grid[$x:$y]=$r
+      case $r in
+        0);;
+        1|2)
+          if (( r == 2 )); then
+            (( !ox && !oy ))
+            ox=x
+            oy=y
+          fi
+          queue+="$path $d"
+          zpty -w z $((flip(d)))
+          next r
+          (( r == 1 || r == 2 ))
+        ;;
+        *) exit 1;;
+      esac
+    fi
+    move $((flip(d)))
+  done
+  sprint ${(Oa)path/(#m)(*)/$((flip(MATCH)))}
+done
+
+(( ox || oy ))
+(( $#grid > 1 ))
+[[ $grid[$ox:$oy] == 2 ]]
+[[ ${#${(M)grid:#2}} == 1 ]]
+queue=("$ox:$oy:0")
+
+local -i res dx dy
+while (( $#queue )); do
+  IFS=: read -r x y res <<<$queue[1]
+  shift 1 queue
+  for dx in {-1,0,1}; do
+    for dy in {-1,0,1}; do
+      (( !dx ^ !dy )) || continue
+      local pos="$((x + dx)):$((y + dy))"
+      [[ ${grid[$pos]:-} == 1 ]] || continue
+      queue+="$pos:$((res+1))"
+      grid[$pos]=2
+    done
+  done
+done
+
+(( res > 0 ))
+echo -E - $res
