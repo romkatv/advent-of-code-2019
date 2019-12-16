@@ -1,0 +1,39 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global # xtrace
+
+zmodload zsh/mathfunc
+
+local input="$(<&0)"
+[[ $input == <-> ]]
+(( $#input >= 7 ))
+
+local -i offset=$input[1,7]
+local -i n=$((10000 * $#input))
+(( n >= offset + 8 ))
+(( offset * 2 >= $#input ))
+
+local v
+local -i i
+
+for ((i = n - offset; i >= $#input; i -= $#input)); do
+  v+=$input
+done
+
+(( i == 0 )) || v=$input[-i,-1]$v
+
+local -ri bs=64
+for i in {1..$((($#v + bs - 1) / bs))}; do
+  local v$i=$v[(i-1)*bs+1,i*bs]
+done
+
+repeat 100; do
+  local -i x=0
+  for i in {$#v..1}; do
+    local p="v$(((i - 1) / bs + 1))[$(((i - 1) % bs + 1))]"
+    typeset $p=$((x = (x + $p) % 10))
+  done
+done
+
+echo -E - ${(j::)v1[1,8]}
