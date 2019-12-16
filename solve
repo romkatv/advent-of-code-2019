@@ -2,16 +2,26 @@
 
 emulate -L zsh
 setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
-setopt pushd_silent prompt_percent no_prompt_subst
+setopt prompt_percent no_prompt_subst monitor
 
 (( ARGC )) || set -- ${ZSH_SCRIPT:h}/<->(/:t)
+
+local -a pids
+trap 'kill -- -${^${pids:#0}} 2>/dev/null' INT EXIT
 
 local task
 for task; do
   [[ $task == <-> ]]
-  pushd ${ZSH_SCRIPT:h}/$task
+  { (cd ${ZSH_SCRIPT:h}/$task && ./solve <input >answer 2>stderr.log) & } >/dev/null
+  pids+=$!
+done
+
+local -i i
+for i in {1..$#}; do
+  task=$*[i]
   print -rP -- "Solving %B$task%b..." >&2
-  ./solve <input >answer
-  print -rP -- "Answer for %B$task%b: %F{green}${(V)$(<answer)//\%//%%}%f" >&2
-  popd
+  wait $pids[i]
+  pids[i]=0
+  <$task/stderr.log >&2
+  print -rP -- "Answer for %B$task%b: %F{green}${(V)$(<$task/answer)//\%//%%}%f" >&2
 done
