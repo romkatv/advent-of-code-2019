@@ -2,27 +2,34 @@
 
 emulate -L zsh
 setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
-setopt prompt_percent no_prompt_subst monitor
+setopt prompt_percent no_prompt_subst pushd_silent no_multi_os
 
 (( ARGC )) || set -- ${ZSH_SCRIPT:h}/<->(/:t)
 
-local -a pids
-trap 'kill -- -${^${pids:#0}} 2>/dev/null' INT EXIT
-
 local task
+
+if (( ARGC > 1 )); then
+  setopt monitor
+  local -a pids
+  trap '(( ! $#pids )) || kill -- -$^pids 2>/dev/null' INT EXIT
+  for task; do
+    [[ $task == <-> ]]
+    { (cd ${ZSH_SCRIPT:h}/$task && ./solve <input >answer 2>stderr.log) & } >/dev/null
+    pids+=$!
+  done
+fi
+
 for task; do
   [[ $task == <-> ]]
-  { (cd ${ZSH_SCRIPT:h}/$task && ./solve <input >answer 2>stderr.log) & } >/dev/null
-  pids+=$!
-done
-
-local -i i
-for i in {1..$#}; do
-  task=$*[i]
   print -rP -- "Solving %B$task%b..." >&2
-  wait $pids[i]
-  pids[i]=0
-  local d=${ZSH_SCRIPT:h}/$task
-  <$d/stderr.log >&2
-  print -rP -- "Answer for %B$task%b: %F{green}${(V)$(<$d/answer)//\%//%%}%f" >&2
+  pushd ${ZSH_SCRIPT:h}/$task
+  if (( ARGC > 1 )); then
+    wait $pids[1]
+    shift 1 pids
+    <stderr.log >&2
+  else
+    ./solve <input 2>&1 >answer | tee stderr.log >&2
+  fi
+  print -rP -- "Answer for %B$task%b: %F{green}${(V)$(<answer)//\%//%%}%f" >&2
+  popd
 done
