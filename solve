@@ -22,6 +22,7 @@ for i in {1..$#}; do
   print -rP -- "Solving %B$task%b..." >&2
   wait $pids[i]
   pids[i]=0
-  <$task/stderr.log >&2
-  print -rP -- "Answer for %B$task%b: %F{green}${(V)$(<$task/answer)//\%//%%}%f" >&2
+  local d=${ZSH_SCRIPT:h}/$task
+  <$d/stderr.log >&2
+  print -rP -- "Answer for %B$task%b: %F{green}${(V)$(<$d/answer)//\%//%%}%f" >&2
 done
