@@ -1,0 +1,27 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
+
+zmodload zsh/mathfunc
+
+local input="$(<&0)"
+[[ $input == <-> ]]
+local v=(${(s::)input})
+(( $#v >= 8 ))
+
+local -i i j
+repeat 100; do
+  local r=()
+  for i in {1..$#v}; do
+    local -i x=0
+    for j in {$i..$#v}; do
+      local -i m='j / i'
+      x+='v[j] * (m % 2 - 2 * (m % 4 == 3))'
+    done
+    r+=$((abs(x) % 10))
+  done
+  v=($r)
+done
+
+echo -E - ${(j::)v[1,8]}
