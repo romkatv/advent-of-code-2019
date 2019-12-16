@@ -23,16 +23,22 @@ done
 
 (( i == 0 )) || v=$input[-i,-1]$v
 
-local -ri bs=64
+local -ri bs=128
 for i in {1..$((($#v + bs - 1) / bs))}; do
   local v$i=$v[(i-1)*bs+1,i*bs]
 done
 
-repeat 100; do
-  local -i x=0
+repeat 5; do
+  local -i x{01..20}=0
   for i in {$#v..1}; do
     local p="v$(((i - 1) / bs + 1))[$(((i - 1) % bs + 1))]"
-    typeset $p=$((x = (x + $p) % 10))
+    (( x10 += x09 += x08 += x07 += x06 += x05 += x04 += x03 += x02 += x01 += $p,  1 ))
+    (( x20 += x19 += x18 += x17 += x16 += x15 += x14 += x13 += x12 += x11 += x10, 1 ))
+    (( x01 %= 10, x02 %= 10, x03 %= 10, x04 %= 10, x05 %= 10, 1 ))
+    (( x06 %= 10, x07 %= 10, x08 %= 10, x09 %= 10, x10 %= 10, 1 ))
+    (( x11 %= 10, x12 %= 10, x13 %= 10, x14 %= 10, x15 %= 10, 1 ))
+    (( x16 %= 10, x17 %= 10, x18 %= 10, x19 %= 10, x20 %= 10, 1 ))
+    typeset $p=$x20
   done
 done
 
