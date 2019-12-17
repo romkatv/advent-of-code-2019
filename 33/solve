@@ -16,7 +16,7 @@ local c line grid=()
     grid+=$line
     line=
   else
-    printf -v c "\\$(([##8]c))"
+    printf -v c \\$(([##8]c))
     line+=$c
   fi
 done

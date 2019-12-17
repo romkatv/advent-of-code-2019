@@ -22,7 +22,7 @@ local -i x y dx dy
       grid+=$line
       line=
     else
-      printf -v c "\\$(([##8]c))"
+      printf -v c \\$(([##8]c))
       line+=$c
       if [[ '<>^v' == *$c* ]]; then
         ! (( x || y || dx || dy ))
