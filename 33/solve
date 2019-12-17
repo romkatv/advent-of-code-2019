@@ -1,0 +1,39 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
+
+local c line grid=()
+
+./icc "$(<&0)" | while read -r c; do
+  [[ $c == (10|35|46|60|62|94|118) ]]
+  if [[ $c == 10 ]]; then
+    if (( $#line == 0 )); then
+      ! read -r c
+      break
+    fi
+    [[ $#grid == 0 || $#grid[1] == $#line ]]
+    grid+=$line
+    line=
+  else
+    printf -v c "\\$(([##8]c))"
+    line+=$c
+  fi
+done
+
+(( $#grid > 2 ))
+
+local -i x y res
+
+for y in {2..$(($#grid - 1))}; do
+  for x in {2..$(($#grid[1] - 1))}; do
+    [[ ${${grid[y]}[x]}   == '#' ]] || continue
+    [[ ${${grid[y-1]}[x]} == '#' ]] || continue
+    [[ ${${grid[y+1]}[x]} == '#' ]] || continue
+    [[ ${${grid[y]}[x-1]} == '#' ]] || continue
+    [[ ${${grid[y]}[x+1]} == '#' ]] || continue
+    res+='(x - 1) * (y - 1)'
+  done
+done
+
+echo -E - $res
