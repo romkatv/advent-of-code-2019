@@ -1,0 +1,19 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
+
+local program="$(<&0)"
+[[ $program == 1,* ]]
+
+function ascii() {
+  local c
+  for c in ${(s::)1}; do
+    echo $((#c))
+  done
+}
+
+local in=$'A,B,A,C,B,A,B,C,C,B\nL,12,L,12,R,4\nR,10,R,6,R,4,R,4\nR,6,L,12,L,12\nn\n' out
+out=($(ascii $in | ./icc 2${program#1}))
+[[ $out[-1] == <1-> ]]
+echo -E - $out[-1]
