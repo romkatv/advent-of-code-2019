@@ -1,0 +1,12 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
+
+local line c
+while read -r line; do
+  for c in ${(s::)line}; do
+    echo $((#c))
+  done
+  echo 10
+done
