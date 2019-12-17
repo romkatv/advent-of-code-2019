@@ -6,14 +6,109 @@ setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
 local program="$(<&0)"
 [[ $program == 1,* ]]
 
-function ascii() {
-  local c
-  for c in ${(s::)1}; do
-    echo $((#c))
+local -a grid=()
+local -i x y dx dy
+
+() {
+  local c line 
+  ./icc $program | while read -r c; do
+    [[ $c == (10|35|46|60|62|94|118) ]]
+    if [[ $c == 10 ]]; then
+      if (( $#line == 0 )); then
+        ! read -r c
+        break
+      fi
+      [[ $#grid == 0 || $#grid[1] == $#line ]]
+      grid+=$line
+      line=
+    else
+      printf -v c "\\$(([##8]c))"
+      line+=$c
+      if [[ '<>^v' == *$c* ]]; then
+        ! (( x || y || dx || dy ))
+        x=$#line
+        y=$(($#grid + 1))
+        case $c in
+          '<') dx=-1;;
+          '>') dx=1;;
+          '^') dy=-1;;
+          'v') dy=1;;
+        esac
+      fi
+    fi
   done
 }
 
-local in=$'A,B,A,C,B,A,B,C,C,B\nL,12,L,12,R,4\nR,10,R,6,R,4,R,4\nR,6,L,12,L,12\nn\n' out
-out=($(ascii $in | ./icc 2${program#1}))
-[[ $out[-1] == <1-> ]]
-echo -E - $out[-1]
+(( $#grid && x && y && !dx != !dy ))
+
+function fwd() {
+  unsetopt err_exit
+  [[ ${${grid[y+dy]:-}[x+dx]:-} == '#' ]]
+}
+
+local -a full_seq
+
+() {
+  while true; do
+    read -r dx dy <<<"$dy $((-dx))"
+    if fwd; then
+      full_seq+=L
+    else
+      read -r dx dy <<<"$((-dx)) $((-dy))"
+      fwd || break
+      full_seq+=R
+    fi
+    full_seq+=0
+    while fwd; do
+      (( ++full_seq[-1] ))
+      x+=dx
+      y+=dy
+    done
+  done
+}
+
+(( $#full_seq ))
+
+function cover() {
+  local seq=$1
+  local main=$2
+  shift 2
+
+  if [[ -z $seq ]]; then
+    echo -E - ${main%,} ${*%,}
+    exit
+  fi
+
+  (( $#main < 21 )) || return 0
+  local -i i
+  for ((i = 1; i <= $#; ++i)); do
+    [[ $seq == $*[i]* ]] || continue
+    cover "${seq#$*[i]}" $main${${:-ABC}[i]}, $*
+  done
+
+  (( $# < 3 )) || return 0
+  main+=${${:-ABC}[$#+1]},
+  local f
+  while [[ -n $seq ]]; do
+    f+=${seq%%,*},
+    (( $#f <= 21 )) || return 0
+    seq=${seq#*,}
+    cover "$seq" $main $* $f
+  done
+}
+
+local -a solution
+cover ${(j:,:)full_seq}, "" | read -rA solution
+(( $#solution == 4 ))
+
+function ascii-encode() {
+  local line c
+  while read -r line; do
+    for c in ${(s::)line}; do
+      echo $((#c))
+    done
+    echo 10
+  done
+}
+
+print -lr $solution n | ascii-encode | ./icc 2${program#1} | tail -1
