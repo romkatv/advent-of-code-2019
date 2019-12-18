@@ -1,0 +1,175 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
+
+local -a grid=(${(f)"$(<&0)"})
+local -i width=$#grid[1]
+local -i height=$#grid
+(( width >= 3 && width % 2 ))
+(( height >= 3 && height % 2 ))
+[[ $grid[1] == '#'# ]]
+[[ $grid[-1] == '#'# ]]
+
+() {
+  local -i y
+  for y in {1..$height}; do
+    local line=$grid[y]
+    local -i x=${${grid[y]}[(I)@]}
+    (( x )) || continue
+    (( x > 2 && x < width -1 ))
+    (( x ))
+    [[ ${${grid[y-1]}[x-1,x+1]} == ... ]]
+    [[ ${${grid[y+0]}[x-1,x+1]} == .@. ]]
+    [[ ${${grid[y+1]}[x-1,x+1]} == ... ]]
+    grid[y-1]=${${grid[y-1]}[1,x-2]}'@#@'${${grid[y-1]}[x+2,-1]}
+    grid[y+0]=${${grid[y+0]}[1,x-2]}'###'${${grid[y+0]}[x+2,-1]}
+    grid[y+1]=${${grid[y+1]}[1,x-2]}'@#@'${${grid[y+1]}[x+2,-1]}
+    break
+  done
+}
+
+local -a pos
+
+() {
+  local -i x y r
+  for y in {1..$height}; do
+    local line=$grid[y]
+    (( $#line == width ))
+    [[ $line == '#'*'#' ]]
+    for x in {1..$#line}; do
+      local c=$line[x]
+      local -i idx=0
+      case $c in
+        [a-z]) idx=$((#c - 97 + 1));;
+        [A-Z]) idx=$((#c - 65 + 26 + 1));;
+        @) idx=$((26 * 2 + ++r));;
+        *) [[ $c == [.A-Z#] ]];;
+      esac
+      if (( idx )); then
+        [[ -z ${pos[idx]:-} ]]
+        pos[idx]=$(((y - 1) * width + x))
+      fi
+    done
+  done
+
+  local p=($pos)
+  (( $#pos == $#p && $#p == 26 * 2 + 4 ))
+
+  grid=${(j::)grid}
+}
+
+local -a claimant
+
+() {
+  local -i cx=$((width / 2 + 1))
+  local -i cy=$((height / 2 + 1))
+  local -i i
+  for i in {1..26}; do
+    claimant+=1
+    local -i x='(pos[i] - 1) % width + 1'
+    local -i y='(pos[i] - 1) / width + 1'
+    (( x < cx )) || (( claimant[-1] += 1 ))
+    (( y < cy )) || (( claimant[-1] += 2 ))
+  done
+}
+
+local -a topology
+
+() {
+  local -i xy
+  for xy in $pos; do
+    local -a adjacent=()
+    local -A visited=()
+    local -a q1=($xy) q2=()
+    local -i dist=0 dxy=0
+    for ((dist = 1; $#q1; ++dist)); do
+      while (( $#q1 )); do
+        local -i r=q1[1]
+        shift 1 q1
+        for dxy in 1 -1 $width -$width; do
+          xy='r + dxy'
+          [[ -z ${visited[$xy]:-} ]] || continue
+          visited[$xy]=1
+          local c=$grid[xy]
+          if [[ $c == . ]]; then
+            q2+=$xy
+            continue
+          fi
+          [[ $c != '#' ]] || continue
+          adjacent+=($pos[(i)$xy] $dist)
+        done
+      done
+      q1=($q2)
+      q2=()
+    done
+    topology+="$adjacent"
+  done
+}
+
+local -A cache
+
+function solve() {
+  local -i keys=$1
+  local cache_key=${(j.:.)*}
+  local -i res=${cache[$cache_key]:-0}
+  if (( res > 0 || keys == (1 << 27) - 2 )); then
+    unsetopt err_exit
+    return res
+  fi
+
+  local -a key_idx
+  local -a key_dist
+  local -a visited
+  local -a q
+  local -i idx dist robot
+  for robot in $*[2,-1]; do
+    q+="$robot 0"
+    visited[robot]=1
+  done
+  while (( $#q )); do
+    local -a p=(${=q[1]})
+    shift 1 q
+    for idx dist in ${=topology[p[1]]}; do
+      [[ -z ${visited[idx]:-} ]] || continue
+      visited[idx]=1
+      local c=$grid[pos[idx]]
+      case $c in
+        [A-Z]) (( keys & (1 << (#c - 65 + 1)) )) || continue;;
+        [a-z])
+          local -i k=$((#c - 97 + 1))
+          [[ -z ${key_dist[k]:-} ]] || continue
+          if (( !(keys & (1 << k)) )); then
+            key_dist[k]=$((dist + p[2]))
+            key_idx+=$k
+            continue
+          fi
+        ;;
+        @);;
+        *) exit 1;;
+      esac
+      q+="$idx $((dist + p[2]))"
+    done
+  done
+
+  (( $#key_dist ))
+
+  res=$((1 << 63 - 1))
+  local -i i
+  for i in $key_idx; do
+    local -i d=key_dist[i]
+    (( d ))
+    local robots=($*[2,-1])
+    robots[claimant[i]]=$i
+    (( d += solve(keys | (1 << i), robots[1], robots[2], robots[3], robots[4]) ))
+    (( res < d )) || res=d
+  done
+
+  cache[$cache_key]=$res
+
+  unsetopt err_exit
+  return res
+}
+functions -M solve 5
+
+echo -E - $((solve(0, 26 * 2 + 1, 26 * 2 + 2, 26 * 2 + 3, 26 * 2 + 4)))
