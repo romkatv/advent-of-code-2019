@@ -1,0 +1,109 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
+
+local -a grid=(${(f)"$(<&0)"})
+(( $#grid > 2 ))
+[[ $grid[1] == '#'# ]]
+[[ $grid[-1] == '#'# ]]
+
+local -i width=$#grid[1]
+local -a pos
+
+() {
+  local -i x y
+  for y in {1..$#grid}; do
+    local line=$grid[y]
+    (( $#line == width ))
+    [[ $line == '#'*'#' ]]
+    for x in {1..$#line}; do
+      local c=$line[x]
+      local -i idx=0
+      case $c in
+        [a-z]) idx=$((#c - 96));;
+        @) idx=27;;
+        *) [[ $c == [.A-Z#] ]];;
+      esac
+      if (( idx )); then
+        [[ -z ${pos[idx]:-} ]]
+        pos[idx]=$(((y - 1) * width + x))
+      fi
+    done
+  done
+
+  local p=($pos)
+  (( $#p == 27 ))
+
+  grid=${(j::)grid}
+}
+
+local -A cache
+
+function solve() {
+  local -i keys=$1
+  local -i robot=$2
+  local cache_key=${(j.:.)*}
+  local -i res=${cache[$cache_key]:-0}
+  if (( res > 0 || keys == (1 << 27) - 2 )); then
+    unsetopt err_exit
+    return res
+  fi
+
+  local -a key_idx
+  local -a key_dist
+  local -A visited
+  local -a q1=($pos[robot]) q2
+  local -i dist dxy
+  for ((dist = 1; $#q1; ++dist)); do
+    while (( $#q1 )); do
+      local -i r=q1[1]
+      shift 1 q1
+      for dxy in 1 -1 $width -$width; do
+        local -i xy='r + dxy'
+        [[ -z ${visited[$xy]:-} ]] || continue
+        visited[$xy]=1
+        local c=$grid[xy]
+        case $c in
+          [#]) continue;;
+          [A-Z]) (( keys & (1 << (#c - 64)) )) || continue;;
+          [a-z])
+            local -i k=$((#c - 96))
+            [[ -z ${key_dist[k]:-} ]] || continue
+            if (( !(keys & (1 << k)) )); then
+              key_dist[k]=$dist
+              key_idx+=$k
+              continue
+            fi
+          ;;
+          '') exit 1;;
+        esac
+        if (( xy == 6 )); then
+          exit 1
+        fi
+        q2+=$xy
+      done
+    done
+    q1=($q2)
+    q2=()
+  done
+
+  (( $#key_dist ))
+
+  res=$((1 << 63 - 1))
+  local -i i
+  for i in $key_idx; do
+    local -i d=key_dist[i]
+    (( d ))
+    (( d += solve(keys | (1 << i), i) ))
+    (( res < d )) || res=d
+  done
+
+  cache[$cache_key]=$res
+
+  unsetopt err_exit
+  return res
+}
+functions -M solve 2
+
+echo -E - $((solve(0, 27)))
