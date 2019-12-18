@@ -10,18 +10,20 @@ local input="$(<&0)"
 local v=(${(s::)input})
 (( $#v >= 8 ))
 
-local -i i j
+local -i i j m
 repeat 100; do
-  local r=()
   for i in {1..$#v}; do
-    local -i x=0
+    local -i x=0 k=1
     for j in {$i..$#v}; do
-      local -i m='j / i'
-      x+='v[j] * (m % 2 - 2 * (m % 4 == 3))'
+      if (( !--k )); then
+        m='j / i'
+        m='m % 2 - 2 * (m % 4 == 3)'
+        k=i
+      fi
+      x+='v[j] * m'
     done
-    r+=$((abs(x) % 10))
+    v[i]=$((abs(x) % 10))
   done
-  v=($r)
 done
 
 echo -E - ${(j::)v[1,8]}
