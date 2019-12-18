@@ -21,8 +21,9 @@ local -a pos
       local c=$line[x]
       local -i idx=0
       case $c in
-        [a-z]) idx=$((#c - 96));;
-        @) idx=27;;
+        [a-z]) idx=$((#c - 97 + 1));;
+        [A-Z]) idx=$((#c - 65 + 26 + 1));;
+        @) idx=$((26 * 2 + 1));;
         *) [[ $c == [.A-Z#] ]];;
       esac
       if (( idx )); then
@@ -33,9 +34,42 @@ local -a pos
   done
 
   local p=($pos)
-  (( $#p == 27 ))
+  (( $#p == 26 * 2 + 1 ))
 
   grid=${(j::)grid}
+}
+
+local -a topology
+
+() {
+  local -i xy
+  for xy in $pos; do
+    local -a adjacent=()
+    local -A visited=()
+    local -a q1=($xy) q2=()
+    local -i dist=0 dxy=0
+    for ((dist = 1; $#q1; ++dist)); do
+      while (( $#q1 )); do
+        local -i r=q1[1]
+        shift 1 q1
+        for dxy in 1 -1 $width -$width; do
+          xy='r + dxy'
+          [[ -z ${visited[$xy]:-} ]] || continue
+          visited[$xy]=1
+          local c=$grid[xy]
+          if [[ $c == . ]]; then
+            q2+=$xy
+            continue
+          fi
+          [[ $c != '#' ]] || continue
+          adjacent+=($pos[(i)$xy] $dist)
+        done
+      done
+      q1=($q2)
+      q2=()
+    done
+    topology+="$adjacent"
+  done
 }
 
 local -A cache
@@ -52,40 +86,33 @@ function solve() {
 
   local -a key_idx
   local -a key_dist
-  local -A visited
-  local -a q1=($pos[robot]) q2
-  local -i dist dxy
-  for ((dist = 1; $#q1; ++dist)); do
-    while (( $#q1 )); do
-      local -i r=q1[1]
-      shift 1 q1
-      for dxy in 1 -1 $width -$width; do
-        local -i xy='r + dxy'
-        [[ -z ${visited[$xy]:-} ]] || continue
-        visited[$xy]=1
-        local c=$grid[xy]
-        case $c in
-          [#]) continue;;
-          [A-Z]) (( keys & (1 << (#c - 64)) )) || continue;;
-          [a-z])
-            local -i k=$((#c - 96))
-            [[ -z ${key_dist[k]:-} ]] || continue
-            if (( !(keys & (1 << k)) )); then
-              key_dist[k]=$dist
-              key_idx+=$k
-              continue
-            fi
-          ;;
-          '') exit 1;;
-        esac
-        if (( xy == 6 )); then
-          exit 1
-        fi
-        q2+=$xy
-      done
+  local -a visited
+  local -a q=("$robot 0")
+  local -i idx dist
+  visited[robot]=1
+  while (( $#q )); do
+    local -a p=(${=q[1]})
+    shift 1 q
+    for idx dist in ${=topology[p[1]]}; do
+      [[ -z ${visited[idx]:-} ]] || continue
+      visited[idx]=1
+      local c=$grid[pos[idx]]
+      case $c in
+        [A-Z]) (( keys & (1 << (#c - 65 + 1)) )) || continue;;
+        [a-z])
+          local -i k=$((#c - 97 + 1))
+          [[ -z ${key_dist[k]:-} ]] || continue
+          if (( !(keys & (1 << k)) )); then
+            key_dist[k]=$((dist + p[2]))
+            key_idx+=$k
+            continue
+          fi
+        ;;
+        @);;
+        *) exit 1;;
+      esac
+      q+="$idx $((dist + p[2]))"
     done
-    q1=($q2)
-    q2=()
   done
 
   (( $#key_dist ))
@@ -106,4 +133,4 @@ function solve() {
 }
 functions -M solve 2
 
-echo -E - $((solve(0, 27)))
+echo -E - $((solve(0, 26 * 2 + 1)))
