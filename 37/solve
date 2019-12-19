@@ -9,7 +9,7 @@ read -r program
 
 function probe() {
   local res
-  res="$(../fancy/icc-fast $program <<<$1$'\n'$2)"
+  res="$(./icc $program <<<$1$'\n'$2)"
   [[ $res == <0-1> ]]
   unsetopt err_exit
   return '!res'
