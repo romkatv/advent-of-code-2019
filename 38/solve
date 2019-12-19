@@ -16,9 +16,30 @@ function probe() {
 }
 functions -M probe 2
 
-local -i y_max=49 x0_max=0 x1_max=1
-while (( probe(x0_max, y_max) == 0 )); do (( ++x0_max, ++x1_max )); done
-while (( probe(x1_max, y_max) == 1 )); do ((           ++x1_max )); done
+(( probe(0, 0) ))
+
+local -i y_max x0_max x1_max
+
+() {
+  local -i i j
+  for ((i = 1;; ++i)); do
+    (( i < 50 ))
+    (( !probe(0, i) ))
+    (( !probe(i, 0) ))
+    for j in {1..$i}; do
+      if (( probe(i, j) )); then
+        (( y_max = j, x0_max = i, x1_max = i ))
+        while (( probe(x0_max - 1, y_max) )) (( --x0_max ))
+      elif (( probe(j, i) )); then
+        (( y_max = i, x0_max = j, x1_max = j ))
+      else
+        continue
+      fi
+      while (( probe(++x1_max, y_max) )) true
+      return
+    done
+  done
+}
 
 function bsearch() {
   local var=$1 f=$2
