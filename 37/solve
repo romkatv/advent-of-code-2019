@@ -1,0 +1,40 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
+
+local program
+read -r program
+[[ -n $program ]]
+
+function probe() {
+  local res
+  res="$(../fancy/icc-fast $program <<<$1$'\n'$2)"
+  [[ $res == <0-1> ]]
+  unsetopt err_exit
+  return '!res'
+}
+
+probe 0 0
+! probe 1 0
+
+local -i x y start=0 len=0 res=1
+
+for ((y = 1; y <= 49; ++y)); do
+  for ((x = start; x <= 49; ++x)); do
+    if probe $x $y; then
+      start=x
+      break
+    fi
+  done
+  (( x = len > 0 ? start + len - 1 : start, 1 ))
+  (( x <= 50 )) || x=50
+  for ((; x <= 49; ++x)); do
+    probe $x $y || break
+  done
+  len=$((x - start))
+  res+=len
+done
+
+(( res > 0 ))
+echo -E - $res
