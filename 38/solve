@@ -1,0 +1,71 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global # xtrace verbose
+
+zmodload zsh/mathfunc
+
+local program
+read -r program
+[[ -n $program ]]
+
+function probe() {
+  local res
+  res="$(./icc $program <<<$1$'\n'$2)"
+  [[ $res == <0-1> ]]
+  unsetopt err_exit
+  return res
+}
+functions -M probe 2
+
+local -i y_max=49 x0_max=0 x1_max=1
+while (( probe(x0_max, y_max) == 0 )); do (( ++x0_max, ++x1_max )); done
+while (( probe(x1_max, y_max) == 1 )); do ((           ++x1_max )); done
+
+function bsearch() {
+  local var=$1 f=$2
+  local -i lb=$3 ub=$4 arg
+  (( ub > lb ))
+  (( arg = lb, !($f) ))
+  (( arg = ub,  ($f) ))
+  while (( ub > lb + 1 )); do
+    local -i m='lb + (ub - lb) / 2'
+    if (( arg = m, ($f) )); then
+      ub=m
+    else
+      lb=m
+    fi
+  done
+  typeset -gi $var=ub
+}
+
+local -i x0 x1
+
+function fit() {
+  local -i y=$1
+  local -i c='(x0_max + x1_max) * y / y_max / 2'
+  local -i len='(x1_max - x0_max + 2) * y / y_max / 2 + 2'
+  bsearch x0 "probe(arg, $y) == 1" $((c - len)) $c
+  bsearch x1 "probe(arg, $y) == 0" $c           $((c + len))
+  local -i x='x1 - 100'
+  if (( x1 - x0 >= 100 && probe(x1 - 100, y + 100 - 1) )); then
+    unsetopt err_exit
+    return 1
+  fi
+}
+functions -M fit 1
+
+(( !fit(y_max) ))
+
+while (( !fit(2 * y_max) )); do
+  (( y_max *= 2 ))
+  (( x0_max = x0 ))
+  (( x1_max = x1 ))
+done
+
+local -i y
+bsearch y 'fit(arg)' $y_max $((2 * y_max))
+(( fit(y) ))
+local -i x='x1 - 100'
+
+echo -E - $((10000 * x + y))
