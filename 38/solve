@@ -66,10 +66,11 @@ local -i x0 x1
 
 function fit() {
   local -i y=$1
+  local -i d='(x1_max - x0_max - 1) / 2'
   local -i c='(x0_max + x1_max) * y / y_max / 2'
-  local -i len='(x1_max - x0_max + 2) * y / y_max / 2 + 2'
-  bsearch x0 "probe(arg, $y) == 1" $((c - len)) $c
-  bsearch x1 "probe(arg, $y) == 0" $c           $((c + len))
+  local -i len='(x1_max - x0_max + 2) * y / y_max / 2 + 1'
+  bsearch x0 "probe(arg, $y) == 1" $((c - len)) $((c - d  ))
+  bsearch x1 "probe(arg, $y) == 0" $((c + d  )) $((c + len))
   local -i x='x1 - 100'
   if (( x1 - x0 >= 100 && probe(x1 - 100, y + 100 - 1) )); then
     unsetopt err_exit
