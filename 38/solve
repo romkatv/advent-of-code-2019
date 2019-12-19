@@ -41,6 +41,10 @@ local -i y_max x0_max x1_max
   done
 }
 
+(( y_max > 0 && x0_max >= 0 && x0_max < x1_max ))
+(( !probe(x0_max - 1, y_max) &&  probe(x0_max, y_max) ))
+((  probe(x1_max - 1, y_max) && !probe(x1_max, y_max) ))
+
 function bsearch() {
   local var=$1 f=$2
   local -i lb=$3 ub=$4 arg
