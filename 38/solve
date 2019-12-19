@@ -3,8 +3,6 @@
 emulate -L zsh
 setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
 
-zmodload zsh/mathfunc
-
 local program
 read -r program
 [[ -n $program ]]
@@ -66,6 +64,4 @@ done
 local -i y
 bsearch y 'fit(arg)' $y_max $((2 * y_max))
 (( fit(y) ))
-local -i x='x1 - 100'
-
-echo -E - $((10000 * x + y))
+echo -E - $((10000 * (x1 - 100) + y))
