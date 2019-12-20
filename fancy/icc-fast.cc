@@ -8,23 +8,21 @@
 // Example: icc-fast 3,0,102,2,0,0,4,0,99 <<<21
 // Output:  42
 
-#include <stddef.h>
 #include <stdint.h>
 #include <array>
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <tuple>
-#include <type_traits>
 #include <vector>
 
 static std::vector<int64_t> mem;
 static int64_t pc, base, mode;
 
-template <class F, size_t Arity, size_t Mode>
+template <class F, int Arity, int Mode>
 void run() {
   std::array<int64_t, Arity> args;
-  auto set_arg = [&](int i, size_t m) {
+  auto set_arg = [&](int i, int m) {
     switch (Mode / m % 10) {
       case 1: args[i] =            pc + i + 1 ; return;
       case 0: args[i] =        mem[pc + i + 1]; break;
@@ -39,8 +37,8 @@ void run() {
   std::apply([=](auto... pos) { (+*static_cast<F*>(0))(mem[pos]...); }, args);
 }
 
-template <size_t N = -1, size_t Mode = -1, class Table, class F, class... Args>
-constexpr void op(Table& table, size_t opcode, F f, void (*)(Args...) = 0) {
+template <int N = -1, int Mode = -1, class Table, class F, class... Args>
+constexpr void op(Table& table, int opcode, F f, void (*)(Args...) = 0) {
   if constexpr (N == -1) {
     op<0, 0>(table, opcode, f, +f);
   } else if constexpr (N == sizeof...(Args)) {
