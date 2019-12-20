@@ -8,8 +8,8 @@
 // Example: icc-fast 3,0,102,2,0,0,4,0,99 <<<21
 // Output:  42
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <array>
 #include <cstdlib>
 #include <iostream>
@@ -17,8 +17,6 @@
 #include <tuple>
 #include <type_traits>
 #include <vector>
-
-using table_t = std::array<void(*)(), 22209>;
 
 static std::vector<int64_t> mem;
 static int64_t pc, base, mode;
@@ -46,19 +44,19 @@ void run() {
   std::apply([=](auto... pos) { (+*static_cast<F*>(0))(mem[pos]...); }, args);
 }
 
-template <class F, size_t N = 0, size_t Mode = 0>
-constexpr void op(table_t& table, size_t opcode, F f) {
+template <size_t N = 0, size_t Mode = 0, class Table, class F>
+constexpr void op(Table& table, size_t opcode, F f) {
   if constexpr (N == arity(+f)) {
     table[100 * Mode + opcode] = &run<F, N, Mode>;
   } else {
-    op<F, N + 1, Mode * 10 + 0>(table, opcode, f);
-    op<F, N + 1, Mode * 10 + 1>(table, opcode, f);
-    op<F, N + 1, Mode * 10 + 2>(table, opcode, f);
+    op<N + 1, Mode * 10 + 0>(table, opcode, f);
+    op<N + 1, Mode * 10 + 1>(table, opcode, f);
+    op<N + 1, Mode * 10 + 2>(table, opcode, f);
   }
 }
 
-constexpr table_t table = []() {
-  table_t t = {};
+constexpr auto table = []() {
+  std::array<void(*)(), 22209> t = {};
   op(t,  1, [](int64_t a, int64_t b, int64_t& r) { r = a + b             ; });  // add
   op(t,  2, [](int64_t a, int64_t b, int64_t& r) { r = a * b             ; });  // mul
   op(t,  7, [](int64_t a, int64_t b, int64_t& r) { r = a < b             ; });  // lt
