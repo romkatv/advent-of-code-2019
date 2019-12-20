@@ -57,22 +57,20 @@ constexpr void op(table_t& table, size_t opcode, F f) {
   }
 }
 
-constexpr auto make_table() {
+constexpr table_t table = []() {
   table_t t = {};
   op(t,  1, [](int64_t a, int64_t b, int64_t& r) { r = a + b             ; });  // add
   op(t,  2, [](int64_t a, int64_t b, int64_t& r) { r = a * b             ; });  // mul
   op(t,  7, [](int64_t a, int64_t b, int64_t& r) { r = a < b             ; });  // lt
   op(t,  8, [](int64_t a, int64_t b, int64_t& r) { r = a == b            ; });  // eq
-  op(t,  5, [](int64_t a, int64_t b            ) { pc = a ? b : pc       ; });  // jnq
+  op(t,  5, [](int64_t a, int64_t b            ) { pc = a ? b : pc       ; });  // jnz
   op(t,  6, [](int64_t a, int64_t b            ) { pc = a ? pc : b       ; });  // jz
   op(t,  9, [](int64_t a                       ) { base += a             ; });  // rel
   op(t,  4, [](int64_t a                       ) { std::cout << a << '\n'; });  // out
   op(t,  3, [](                      int64_t& r) { std::cin >> r         ; });  // in
   op(t, 99, [](                                ) { std::exit(0)          ; });  // hlt
   return t;
-}
-
-constexpr table_t table = make_table();
+}();
 
 int main(int argc, char** argv) {
   for (std::istringstream ss(argv[1]); mem.push_back(0), ss >> mem.back(); ss.get()) {}
