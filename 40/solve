@@ -69,8 +69,7 @@ functions -M lvl 2
         x2='x1 + dx'
         y2='y1 + dy'
         z2=z1
-        local c=${${grid[y2]}[x2]}
-        if [[ $c == [A-Z] ]]; then
+        if [[ ${${grid[y2]}[x2]} == [A-Z] ]]; then
           local w=$warp_name[$x2:$y2]
           case $w in
             AA) continue;;
@@ -85,14 +84,13 @@ functions -M lvl 2
               for x2 y2 in ${=warp_dest[$w]}; do
                 (( x2 == x1 && y2 == y1 )) || break
               done
-              c=${${grid[y2]}[x2]}
             ;;
           esac
         fi
         local xyz="$x2 $y2 $z2"
         [[ ! -v visited[$xyz] ]] || continue
         visited[$xyz]=1
-        case $c in
+        case ${${grid[y2]}[x2]} in
           '#')         ;;
           '.') q2+=$xyz;;
             *) exit 1  ;;

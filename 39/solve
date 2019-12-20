@@ -27,9 +27,8 @@ local -A warp_dest
         else
           name=$c1$c2
         fi
-        pos="$x $y"
-        [[ ! -v warp_name[$pos] ]]
-        warp_name[$pos]=$name
+        [[ ! -v warp_name[$x:$y] ]]
+        warp_name[$x:$y]=$name
         warp_dest[$name]+="$((x + dx)) $((y + dy)) "
         break
       done
@@ -49,8 +48,8 @@ local -A warp_dest
 }
 
 () {
-  local -A visited=($warp_dest[AA] 1)
   local -a q1=($warp_dest[AA]) q2=()
+  local -A visited=($q1[1] 1)
   local -i dist x1 y1 x2 y2 dx dy
   for ((dist=0; $#q1; ++dist)); do
     while (( $#q1 )); do
@@ -59,10 +58,8 @@ local -A warp_dest
       for dx dy in -1 0 1 0 0 -1 0 1; do
         x2='x1 + dx'
         y2='y1 + dy'
-        local xy="$x2 $y2"
-        local c=${${grid[y2]}[x2]}
-        if [[ $c == [A-Z] ]]; then
-          local w=$warp_name[$xy]
+        if [[ ${${grid[y2]}[x2]} == [A-Z] ]]; then
+          local w=$warp_name[$x2:$y2]
           case $w in
             AA) continue               ;;
             ZZ) echo -E - $dist; return;;
@@ -70,14 +67,13 @@ local -A warp_dest
               for x2 y2 in ${=warp_dest[$w]}; do
                 (( x2 == x1 && y2 == y1 )) || break
               done
-              xy="$x2 $y2"
-              c=${${grid[y2]}[x2]}
             ;;
           esac
         fi
+        local xy="$x2 $y2"
         [[ ! -v visited[$xy] ]] || continue
         visited[$xy]=1
-        case $c in
+        case ${${grid[y2]}[x2]} in
           '#')        ;;
           '.') q2+=$xy;;
             *) exit 1 ;;
