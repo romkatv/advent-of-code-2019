@@ -3,39 +3,33 @@
 emulate -L zsh
 setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
 
-zmodload zsh/zpty
-
 local program
 read -r program
 
-function amp() (
-  { echo -E - $1; exec cat } | { ./icc $program; exit }
-)
-
-function loop() {
-  local REPLY line
-  zpty x "( $1 ) 2>&3 && echo ok" 3>&2
-  trap 'zpty -d x' EXIT
-  zpty -w x 0
-  while true; do
-    zpty -r x line
-    line=${line%$'\r\n'}
-    [[ ! -o xtrace || $line != '+(zpty):'* ]] || continue
-    [[ $line != ok ]] || break
-    [[ $line == <1-> ]]
-    zpty -w x $line
-    echo -E - $line
-  done
+function amp() {
+  { echo -E - $1; exec cat } | ./icc $program
 }
 
 local -i res
-local out x
+local x n fifo
+
+fifo="$(mktemp -u)"
+trap "rm -f ${(q)fifo} 2>/dev/null" INT TERM EXIT
 
 for x in {56789..98765}; do
   [[ ${(j::)${(os::)x}} == 56789 ]] || continue
-  out=${$(loop "amp $x[1] | amp $x[2] | amp $x[3] | amp $x[4] | amp $x[5]")[-1]}
-  [[ $out == <1-> ]]
-  (( res > out )) || res=out
+  mkfifo $fifo
+  <$fifo amp $x[1] | amp $x[2] | amp $x[3] | amp $x[4] | amp $x[5] | {
+    exec 3>$fifo
+    echo 0 >&3
+    while read n; do
+      [[ $n == <1-> ]]
+      (( res > n )) || res=n
+      echo -E - $n >&3
+    done
+    exec 3>&-
+  }
+  rm $fifo
 done
 
 (( res > 0 ))
