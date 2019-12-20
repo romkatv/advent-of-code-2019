@@ -9,9 +9,9 @@ setopt prompt_percent no_prompt_subst pushd_silent no_multi_os
 local task
 
 if (( ARGC > 1 )); then
-  setopt monitor
+  setopt monitor no_hup no_check_jobs
   local -a pids
-  trap '(( ! $#pids )) || kill -- -$^pids 2>/dev/null' INT EXIT
+  trap '(( ! $#pids )) || kill -- -$^pids 2>/dev/null' INT TERM EXIT
   for task; do
     [[ $task == <-> ]]
     { (cd ${ZSH_SCRIPT:h}/$task && ./solve <input >answer 2>stderr.log) & } >/dev/null
@@ -24,9 +24,11 @@ for task; do
   print -rP -- "Solving %B$task%b..." >&2
   pushd ${ZSH_SCRIPT:h}/$task
   if (( ARGC > 1 )); then
-    wait $pids[1]
+    local -i ret=0
+    wait $pids[1] || ret=$?
     shift 1 pids
     <stderr.log >&2
+    (( !ret )) || return ret
   else
     ./solve <input 2>&1 >answer | tee stderr.log >&2
   fi
