@@ -1,0 +1,91 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
+
+local -a grid=(${(f)"$(<&0)"})
+local -i width=$#grid[1]
+local -i height=$#grid
+(( width && height ))
+
+local -A warp_name
+local -A warp_dest
+
+() {
+  local -i x y dx dy
+  local c1 c2 name pos
+  for y in {1..$height}; do
+    for x in {1..$width}; do
+      c1=${${grid[y]}[x]}
+      [[ $c1 == [A-Z] ]] || continue
+      for dx dy in -1 0 1 0 0 -1 0 1; do
+        [[ ${${grid[y+dy]:-}[x+dx]:-} == . ]] || continue
+        c2=${${grid[y-dy]}[x-dx]}
+        [[ $c2 == [A-Z] ]]
+        if (( dx + dy > 0 )); then
+          name=$c2$c1
+        else
+          name=$c1$c2
+        fi
+        pos="$x $y"
+        [[ ! -v warp_name[$pos] ]]
+        warp_name[$pos]=$name
+        warp_dest[$name]+="$((x + dx)) $((y + dy)) "
+        break
+      done
+    done
+  done
+
+  [[ -v warp_dest[AA] && -v warp_dest[ZZ] ]]
+
+  for name pos in ${(kv)warp_dest}; do
+    local p=($=pos)
+    if [[ $name == (AA|ZZ) ]]; then
+      (( $#p == 2 ))
+    else
+      (( $#p == 4 ))
+    fi
+  done
+}
+
+() {
+  local -A visited=($warp_dest[AA] 1)
+  local -a q1=($warp_dest[AA]) q2=()
+  local -i dist x1 y1 x2 y2 dx dy
+  for ((dist=0; $#q1; ++dist)); do
+    while (( $#q1 )); do
+      read -r x1 y1 <<<$q1[1]
+      shift 1 q1
+      for dx dy in -1 0 1 0 0 -1 0 1; do
+        x2='x1 + dx'
+        y2='y1 + dy'
+        local xy="$x2 $y2"
+        local c=${${grid[y2]}[x2]}
+        if [[ $c == [A-Z] ]]; then
+          local w=$warp_name[$xy]
+          case $w in
+            AA) continue               ;;
+            ZZ) echo -E - $dist; return;;
+            *)
+              for x2 y2 in ${=warp_dest[$w]}; do
+                (( x2 == x1 && y2 == y1 )) || break
+              done
+              xy="$x2 $y2"
+              c=${${grid[y2]}[x2]}
+            ;;
+          esac
+        fi
+        [[ ! -v visited[$xy] ]] || continue
+        visited[$xy]=1
+        case $c in
+          '#')        ;;
+          '.') q2+=$xy;;
+            *) exit 1 ;;
+        esac
+      done
+    done
+    q1=($q2)
+    q2=()
+  done
+  return 1
+}
