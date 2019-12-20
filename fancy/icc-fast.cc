@@ -21,11 +21,6 @@
 static std::vector<int64_t> mem;
 static int64_t pc, base, mode;
 
-template <class... Ts>
-constexpr size_t arity(void(*)(Ts...)) {
-  return sizeof...(Ts);
-}
-
 template <class F, size_t Arity, size_t Mode>
 void run() {
   std::array<int64_t, Arity> args;
@@ -44,14 +39,16 @@ void run() {
   std::apply([=](auto... pos) { (+*static_cast<F*>(0))(mem[pos]...); }, args);
 }
 
-template <size_t N = 0, size_t Mode = 0, class Table, class F>
-constexpr void op(Table& table, size_t opcode, F f) {
-  if constexpr (N == arity(+f)) {
+template <size_t N = -1, size_t Mode = -1, class Table, class F, class... Args>
+constexpr void op(Table& table, size_t opcode, F f, void (*)(Args...) = 0) {
+  if constexpr (N == -1) {
+    op<0, 0>(table, opcode, f, +f);
+  } else if constexpr (N == sizeof...(Args)) {
     table[100 * Mode + opcode] = &run<F, N, Mode>;
   } else {
-    op<N + 1, Mode * 10 + 0>(table, opcode, f);
-    op<N + 1, Mode * 10 + 1>(table, opcode, f);
-    op<N + 1, Mode * 10 + 2>(table, opcode, f);
+    op<N + 1, Mode * 10 + 0>(table, opcode, f, +f);
+    op<N + 1, Mode * 10 + 1>(table, opcode, f, +f);
+    op<N + 1, Mode * 10 + 2>(table, opcode, f, +f);
   }
 }
 
