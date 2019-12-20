@@ -22,9 +22,9 @@ done
 (( n ))
 
 function gcd() {
-  local -i a=$1 b=$2 tmp
+  local -i a=$1 b=$2
   while (( b )); do
-    (( tmp = b, b = a % b, a = tmp, 1 ))
+    read -r a b <<<"$b $((a % b))"
   done
   unsetopt err_exit
   return a
