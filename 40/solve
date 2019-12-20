@@ -1,0 +1,106 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
+
+local -a grid=(${(f)"$(<&0)"})
+local -i width=$#grid[1]
+local -i height=$#grid
+(( width && height ))
+
+local -A warp_name
+local -A warp_dest
+
+function lvl() {
+  local -i x=$1 y=$2
+  local -i res='x == 2 || y == 2 || x == width - 1 || y == height - 1 ? -1 : 1'
+  unsetopt err_exit
+  return res
+}
+functions -M lvl 2
+
+() {
+  local -i x y dx dy
+  local c1 c2 name pos
+  for y in {1..$height}; do
+    for x in {1..$width}; do
+      c1=${${grid[y]}[x]}
+      [[ $c1 == [A-Z] ]] || continue
+      for dx dy in -1 0 1 0 0 -1 0 1; do
+        [[ ${${grid[y+dy]:-}[x+dx]:-} == . ]] || continue
+        c2=${${grid[y-dy]}[x-dx]}
+        [[ $c2 == [A-Z] ]]
+        if (( dx + dy > 0 )); then
+          name=$c2$c1
+        else
+          name=$c1$c2
+        fi
+        [[ $name != (AA|ZZ) ]] || (( lvl(x, y) == -1 ))
+        [[ ! -v warp_name[$x:$y] ]]
+        warp_name[$x:$y]=$name
+        warp_dest[$name]+="$((x + dx)) $((y + dy)) "
+        break
+      done
+    done
+  done
+
+  [[ -v warp_dest[AA] && -v warp_dest[ZZ] ]]
+
+  for name pos in ${(kv)warp_dest}; do
+    local p=($=pos)
+    if [[ $name == (AA|ZZ) ]]; then
+      (( $#p == 2 ))
+    else
+      (( $#p == 4 ))
+    fi
+  done
+}
+
+() {
+  local -a q1=("$warp_dest[AA] 0") q2=()
+  local -A visited=($q1[1] 1)
+  local -i dist x1 y1 z1 x2 y2 z2 dx dy
+  for ((dist=0; $#q1; ++dist)); do
+    while (( $#q1 )); do
+      read -r x1 y1 z1 <<<$q1[1]
+      (( x1 > 0 && y1 > 0 && z1 >= 0 ))
+      shift 1 q1
+      for dx dy in -1 0 1 0 0 -1 0 1; do
+        x2='x1 + dx'
+        y2='y1 + dy'
+        z2=z1
+        local c=${${grid[y2]}[x2]}
+        if [[ $c == [A-Z] ]]; then
+          local w=$warp_name[$x2:$y2]
+          case $w in
+            AA) continue;;
+            ZZ)
+              (( !z2 )) || continue
+              echo -E - $dist
+              return
+            ;;
+            *)
+              (( z2 += lvl(x2, y2), 1 ))
+              (( z2 >= 0 )) || continue
+              for x2 y2 in ${=warp_dest[$w]}; do
+                (( x2 == x1 && y2 == y1 )) || break
+              done
+              c=${${grid[y2]}[x2]}
+            ;;
+          esac
+        fi
+        local xyz="$x2 $y2 $z2"
+        [[ ! -v visited[$xyz] ]] || continue
+        visited[$xyz]=1
+        case $c in
+          '#')         ;;
+          '.') q2+=$xyz;;
+            *) exit 1  ;;
+        esac
+      done
+    done
+    q1=($q2)
+    q2=()
+  done
+  return 1
+}
