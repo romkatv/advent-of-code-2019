@@ -3,14 +3,12 @@
 emulate -L zsh
 setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
 
-function ascii-decode() {
-  local n
-  while read -r n; do
-    [[ $n == (-|)<-> ]]
-    if [[ $n == <1-127> ]]; then
-      printf \\$(([##8]n))
-    else
-      echo -E - $n
-    fi
-  done
-}
+local n
+while read -r n; do
+  [[ $n == (-|)<-> ]]
+  if [[ $n == <1-127> ]]; then
+    printf \\$(([##8]n))
+  else
+    echo -E - $n
+  fi
+done
