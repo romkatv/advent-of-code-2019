@@ -1,0 +1,35 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
+
+local program="$(<&0)"
+[[ -n $program ]]
+
+function ascii-encode() {
+  local line c
+  while read -r line; do
+    for c in ${(s::)line}; do
+      echo $((#c))
+    done
+    echo 10
+  done
+}
+
+local script=(
+  'OR A J'
+  'AND B J'
+  'AND C J'
+  'NOT J J'
+  'AND D J'
+  'OR E T'
+  'OR H T'
+  'AND T J'
+  'RUN')
+
+(( $#script <= 16 ))
+
+local res
+res=$(print -lr -- $script | ascii-encode | ./icc $program | tail -1)
+[[ $res == <1-> && $res -gt 127 ]]
+echo -E - $res
