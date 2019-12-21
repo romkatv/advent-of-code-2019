@@ -7,7 +7,7 @@ local program
 read -r program
 
 function amp() {
-  { echo -E - $1; exec cat } | ./icc $program
+  { echo -E - $1; exec cat } | { ./icc $program; exit }
 }
 
 local -i res
