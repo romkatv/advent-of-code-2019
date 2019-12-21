@@ -111,4 +111,4 @@ function ascii-encode() {
   done
 }
 
-print -lr $solution n | ascii-encode | ./icc 2${program#1} | tail -1
+print -lr -- $solution n | ascii-encode | ./icc 2${program#1} | tail -1
