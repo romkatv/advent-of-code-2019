@@ -1,0 +1,50 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
+
+local program="$(<&0)"
+[[ -n $program ]]
+
+function ascii-encode() {
+  local line c
+  while read -r line; do
+    for c in ${(s::)line}; do
+      echo $((#c))
+    done
+    echo 10
+  done
+}
+
+local res
+local -i mask i
+
+for mask in {0..15}; do
+  local script=()
+  if (( mask & (1 << 0) )); then  # J = B & C (T = false)
+    script+=('OR B J' 'AND C J')
+  fi
+  if (( mask & (1 << 3) )); then  # J = !B & !C = !(B | C)
+    script+=('OR B T' 'OR C T' 'NOT T T' 'OR T J')
+  fi
+  if (( mask & (1 << 1) )); then  # J = !B & C
+    script+=('NOT B T' 'AND C T' 'OR T J')
+  fi
+  if (( mask & (1 << 2) )); then  # J = !B & C
+    script+=('NOT C T' 'AND B T' 'OR T J')
+  fi
+  script+=(
+    'NOT A T'
+    'OR T J'
+    'AND D J'
+    'WALK')
+  (( $#script <= 16 ))
+  res=$(print -lr -- $script | ascii-encode | ./icc $program | tail -1)
+  [[ $res == <1-> ]]
+  if (( res > 127 )); then
+    echo -E - $res
+    exit
+  fi
+done
+
+exit 1
