@@ -1,0 +1,86 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
+
+local -ri m=119315717514047
+local -ri n=101741582076661
+local -ri start=2020
+
+(( $+commands[bc] && $+commands[tac] ))
+
+function norm() {
+  local -i res="$1 < 0 ? $1 + m : $1"
+  (( res >= 0 && res < m ))
+  unsetopt err_exit
+  return res
+}
+functions -M norm 1
+
+function inv() {
+  local -i a=$1
+  local -i t1=0 t2=1 r1=m r2=a
+  while (( r2 )); do
+    local -i q=$((r1 / r2))
+    read -r t1 t2 <<<"$t2 $((t1 - q * t2))"
+    read -r r1 r2 <<<"$r2 $((r1 - q * r2))"
+  done
+  (( r1 <= 1 ))
+  unsetopt err_exit
+  return 'norm(t1)'
+}
+functions -M inv 1
+
+function mul() {
+  local res
+  res="$(bc <<<"$1 * $2 % $m")"
+  [[ $res == (-|)<-> ]]
+  unsetopt err_exit
+  return 'norm(res)'
+}
+functions -M mul 2
+
+function add() {
+  local -i res=$((($1 + $2) % m))
+  unsetopt err_exit
+  return 'norm(res)'
+}
+functions -M add 2
+
+function pow() {
+  local -i x=$1 n=$2 y=1
+  while ((n > 1)); do
+    if ((n % 2)); then
+      y='mul(y, x)'
+      (( n-- ))
+    fi
+    x='mul(x, x)'
+    (( n /= 2, 1 ))
+  done
+  unsetopt err_exit
+  return 'mul(x, y)'
+}
+functions -M pow 2
+
+local -i k=1 b=0
+
+() {
+  local line match mbegin mend
+  tac | while read -r line; do
+    if [[ $line == 'deal into new stack' ]]; then
+      (( k = mul(k, -1), b = add(mul(b, -1), -1), 1 ))
+    elif [[ $line == (#b)'cut '((-|)<->) ]]; then
+      (( b = add(b, match[1]), 1 ))
+    elif [[ $line == (#b)'deal with increment '(<1->) ]]; then
+      local -i x='inv(match[1])'
+      (( k = mul(k, x), b = mul(b, x), 1 ))
+    else
+      exit 1
+    fi
+  done
+}
+
+local -i x='mul(b, inv(k - 1))'
+local -i res='add(mul(add(start, x), pow(k, n)), -x)'
+
+echo -E - $res
