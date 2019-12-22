@@ -5,8 +5,8 @@ setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
 
 local -ri m=10007
 
-local line match
 local -i x=2019
+local line match mbegin mend
 while read -r line; do
   if [[ $line == 'deal into new stack' ]]; then
     (( x = (m + m - x - 1) % m, 1 ))
