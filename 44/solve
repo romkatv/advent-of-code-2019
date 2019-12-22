@@ -7,7 +7,7 @@ local -ri m=119315717514047
 local -ri n=101741582076661
 local -ri start=2020
 
-(( $+commands[bc] && $+commands[tac] ))
+(( $+commands[tac] ))
 
 function norm() {
   local -i res="$1 < 0 ? $1 + m : $1"
@@ -32,11 +32,23 @@ function inv() {
 functions -M inv 1
 
 function mul() {
-  local res
-  res="$(bc <<<"$1 * $2 % $m")"
-  [[ $res == (-|)<-> ]]
+  local -i a=$1 b=$2 res
+  local -i sign=1
+  if (( a < 0 )); then
+    (( a *= -1 ))
+    (( sign *= -1 ))
+  fi
+  if (( b < 0 )); then
+    (( b *= -1 ))
+    (( sign *= -1 ))
+  fi
+  while (( b )); do
+    (( b & 1 == 0 )) || res='add(res, a)'
+    a='add(a, a)'
+    (( b >>= 1, 1 ))
+  done
   unsetopt err_exit
-  return 'norm(res)'
+  return 'norm(sign * res)'
 }
 functions -M mul 2
 
@@ -50,12 +62,9 @@ functions -M add 2
 function pow() {
   local -i x=$1 n=$2 y=1
   while ((n > 1)); do
-    if ((n % 2)); then
-      y='mul(y, x)'
-      (( n-- ))
-    fi
+    (( n & 1 == 0 )) || y='mul(y, x)'
     x='mul(x, x)'
-    (( n /= 2, 1 ))
+    (( n >>= 1, 1 ))
   done
   unsetopt err_exit
   return 'mul(x, y)'
