@@ -6,9 +6,9 @@ setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
 local program
 read -r program
 
-function amp() {
+function amp() (
   { echo -E - $1; exec cat } | { ./icc $program; exit }
-}
+)
 
 local -i res
 local x n fifo
