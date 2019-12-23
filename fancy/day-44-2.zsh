@@ -17,7 +17,7 @@ for f g in mul add pow mul; do
   functions -M $f 2
 done
 
-integer k=1 b=0 x
+integer k=1 b=0
 while read -r s; do
   case $s in
     *inc*) (( b = mul(b, ${s##* })     , k = mul(k, ${s##* }) ));;
@@ -26,5 +26,5 @@ while read -r s; do
   esac
 done
 
-(( k = pow(k, m-2), x=mul(mul(-b, k), pow(add(k, -1), m-2)) ))
-echo $((add(mul(add(x, start), pow(k, n)), -x)))
+integer x='mul(b, pow(k-1, m-2))'
+echo $((add(mul(add(x, start), pow(pow(k, m-2), n)), -x)))
