@@ -9,16 +9,6 @@ local program
 read -r program
 [[ -n $program ]]
 
-trap 'zpty -d z{0..49}' EXIT
-
-() {
-  local REPLY i
-  for i in {0..49}; do
-    zpty z$i "./icc ${(q)program} $'in\n' 2>&3 && echo ok" 3>&2
-    zpty -w z$i $i
-  done
-}
-
 function next() {
   local line
   while true; do
@@ -28,6 +18,18 @@ function next() {
     [[ $line == (in|<->|-<->) ]]
     typeset -g $2=$line
     return
+  done
+}
+
+trap 'zpty -d z{0..49}' EXIT
+
+() {
+  local REPLY i c
+  for i in {0..49}; do
+    zpty z$i "./icc ${(q)program} $'in\n' 2>&3 && echo ok" 3>&2
+    next $i c
+    [[ $c == in ]]
+    zpty -w z$i $i
   done
 }
 
