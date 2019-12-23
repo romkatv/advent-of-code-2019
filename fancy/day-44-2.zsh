@@ -20,11 +20,11 @@ done
 integer k=1 b=0 x
 while read -r s; do
   case $s in
-    *inc*) (( b = mul(b, x = pow(${s##* }, m-2)), k = mul(k,  x) ));;
-    *new*) (( b = add(-1, -b)                   , k = add(0, -k) ));;
-    *cut*) (( b = add(b, ${s##* })              , k = k          ));;
+    *inc*) (( b = mul(b, ${s##* })     , k = mul(k, ${s##* }) ));;
+    *new*) (( b = add(-1, -b)          , k = add(0, -k)       ));;
+    *cut*) (( b = add(b, -1 * ${s##* }), k = k                ));;
   esac
 done
 
-(( k = pow(k, m-2), x=mul(mul(b, k), pow(add(1, -k), m-2)) ))
+(( k = pow(k, m-2), x=mul(mul(-b, k), pow(add(k, -1), m-2)) ))
 echo $((add(mul(add(x, start), pow(k, n)), -x)))
