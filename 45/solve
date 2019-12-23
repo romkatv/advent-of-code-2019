@@ -43,6 +43,8 @@ function step() {
       local q=q$1
       if (( ${(P)#q} )); then
         zpty -w z$1 ${(P)${:-${q}[1]}}
+        next $1 c
+        [[ $c == in ]]
         shift 1 $q
       else
         zpty -w z$1 -1
