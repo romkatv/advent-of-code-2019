@@ -1,0 +1,89 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
+
+zmodload zsh/zpty
+
+local program
+read -r program
+[[ -n $program ]]
+
+function next() {
+  local line
+  while true; do
+    zpty -r z$1 line
+    line=${line%$'\r\n'}
+    [[ ! -o xtrace || $line != '+(zpty):'* ]] || continue
+    [[ $line == (in|<->|-<->) ]]
+    typeset -g $2=$line
+    return
+  done
+}
+
+trap 'zpty -d z{0..49}' EXIT
+
+() {
+  local REPLY i c
+  for i in {0..49}; do
+    zpty z$i "./icc ${(q)program} $'in\n' 2>&3 && echo ok" 3>&2
+    next $i c
+    [[ $c == in ]]
+    zpty -w z$i $i
+  done
+}
+
+local -i idle
+local -a q{0..49} nat
+
+function step() {
+  local c
+  next $1 c
+  case $c in
+    in)
+      local q=q$1
+      if (( ${(P)#q} )); then
+        zpty -w z$1 ${(P)${:-${q}[1]}}
+        next $1 c
+        [[ $c == in ]]
+        shift 1 $q
+        idle=0
+      else
+        zpty -w z$1 -1
+      fi
+    ;;
+    <0-49>|255)
+      local x y
+      next $1 x
+      next $1 y
+      [[ $x != in && $y != in && $x != -1 ]]
+      if [[ $c == 255 ]]; then
+        nat=($x $y)
+      else
+        eval "q$c+=$x\$'\n'$y"
+      fi
+      idle=0
+    ;;
+    *) exit 1;;
+  esac
+}
+
+local -i i
+local last
+
+while true; do
+  idle=1
+  for i in {0..49}; do
+    step $i
+  done
+  if (( $#nat && idle )); then
+    (( $#nat == 2 ))
+    if [[ $nat[2] == $last ]]; then
+      echo -E - $last
+      break
+    fi
+    q0+=${(pj:\n:)nat}
+    last=$nat[2]
+    nat=()
+  fi
+done
