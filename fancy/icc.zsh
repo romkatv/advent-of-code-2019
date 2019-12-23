@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env zsh -o ksh_arrays
 #
 # Simple, clean and concise implementation of Intcode Computer in zsh.
 #
@@ -8,8 +8,6 @@
 #
 # Example: icc.zsh 3,0,102,2,0,0,4,0,99 <<<21
 # Output:  42
-
-emulate -L zsh -o ksh_arrays
 
 local -a mem
 local -i pc base mode REPLY

@@ -8,12 +8,10 @@ functions -M add 2
 for f g in mul add pow mul; do
   functions[$f]='
     integer a=$1 b="$2-1" res=$1
-    while (( b )); do
+    for ((;; b >>= 1, a='$g'(a, a))); do
+      (( b )) || return res
       (( b & 1 == 0 )) || res="'$g'(res, a)"
-      a="'$g'(a, a)"
-      (( b >>= 1 ))
-    done
-    return res'
+    done'
   functions -M $f 2
 done
 
