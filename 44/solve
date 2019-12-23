@@ -24,21 +24,6 @@ function add() {
 }
 functions -M add 2
 
-function inv() {
-  local -i a=$1
-  local -i t1=0 t2=1 r1=m r2=a
-  (( a > 0 && a < m ))
-  while (( r2 )); do
-    local -i q=$((r1 / r2))
-    read -r t1 t2 <<<"$t2 $((t1 - q * t2))"
-    read -r r1 r2 <<<"$r2 $((r1 - q * r2))"
-  done
-  (( r1 <= 1 ))
-  unsetopt err_exit
-  return 'norm(t1)'
-}
-functions -M inv 1
-
 () {
   local f g unit
   for f g unit in mul add 0 pow mul 1; do
@@ -66,7 +51,7 @@ local -i k=1 b=0
     elif [[ $line == (#b)'cut '((-|)<->) ]]; then
       (( b = add(b, match[1]), 1 ))
     elif [[ $line == (#b)'deal with increment '(<1->) ]]; then
-      local -i x='inv(match[1])'
+      local -i x='pow(add(0, match[1]), m-2)'
       (( k = mul(k, x), b = mul(b, x), 1 ))
     else
       exit 1
@@ -74,5 +59,5 @@ local -i k=1 b=0
   done
 }
 
-local -i x='mul(b, inv(add(k, -1)))'
+local -i x='mul(b, pow(add(k, -1), m-2))'
 echo -E - $((add(mul(add(x, start), pow(k, n)), -x)))
