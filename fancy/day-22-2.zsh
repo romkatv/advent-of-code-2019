@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 
-integer m=119315717514047 n=101741582076661 start=2020
+integer m=119315717514047 n=101741582076661 needle=2020
 
 function add() { return "(($1 + $2) % m + m) % m" }
 functions -M add 2
@@ -25,4 +25,4 @@ while read -r s; do
 done
 
 integer x='mul(b, pow(k-1, m-2))'
-echo $((add(mul(add(x, start), pow(pow(k, m-2), n)), -x)))
+echo $((add(mul(add(x, needle), pow(pow(k, m-2), n)), -x)))
