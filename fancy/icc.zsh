@@ -1,12 +1,10 @@
 #!/usr/bin/env zsh
 #
-# Simple, clean and concise implementation of Intcode Computer in zsh.
-#
-# Usage: icc.zsh <intcode>
+# Usage: icc.zsh "intcode"
 #
 # Input/output instructions use stdin/stdout.
 #
-# Example: icc.zsh 3,0,102,2,0,0,4,0,99 <<<21
+# Example: icc.zsh "3,0,102,2,0,0,4,0,99" <<<"21"
 # Output:  42
 
 local mem

@@ -1,11 +1,11 @@
 // Fast implementation of Intcode Computer in C++.
 //
 // Compile: g++ -std=c++17 -O3 -o icc-fast icc-fast.cc
-// Usage: icc-fast <intcode>
+// Usage: icc-fast "intcode"
 //
 // Input/output instructions use stdin/stdout.
 //
-// Example: icc-fast 3,0,102,2,0,0,4,0,99 <<<21
+// Example: icc-fast "3,0,102,2,0,0,4,0,99" <<<"21"
 // Output:  42
 
 #include <stdint.h>

@@ -1,11 +1,11 @@
-// Simple, clean and concise implementation of Intcode Computer in C++.
+// Simple implementation of Intcode Computer in C++.
 //
-// Compile: g++ -std=c++17 -o icc-pretty icc-pretty.cc
-// Usage: icc-pretty <intcode>
+// Compile: g++ -std=c++17 -O3 -o icc-pretty icc-pretty.cc
+// Usage: icc-pretty "intcode"
 //
 // Input/output instructions use stdin/stdout.
 //
-// Example: icc-pretty 3,0,102,2,0,0,4,0,99 <<<21
+// Example: icc-pretty "3,0,102,2,0,0,4,0,99" <<<"21"
 // Output:  42
 
 #include <stdint.h>
