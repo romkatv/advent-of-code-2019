@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh -o ksh_arrays
+#!/usr/bin/env zsh
 #
 # Simple, clean and concise implementation of Intcode Computer in zsh.
 #
@@ -9,8 +9,8 @@
 # Example: icc.zsh 3,0,102,2,0,0,4,0,99 <<<21
 # Output:  42
 
-local -a mem
-local -i pc base mode REPLY
+local mem REPLY
+local -i pc base mode
 
 IFS=, read -rA mem <<<${1:?usage: icc.zsh <intcode>}
 
@@ -18,9 +18,9 @@ function argpos() {
   local -i m='mode % 10'
   (( mode /= 10 ))
   case $m in
-    1) return 'pc++'            ;;
-    0) return 'mem[pc++]'       ;;
-    2) return 'mem[pc++] + base';;
+    1) return '++pc'                ;;
+    0) return 'mem[++pc] + 1'       ;;
+    2) return 'mem[++pc] + 1 + base';;
   esac
 }
 
@@ -32,8 +32,8 @@ functions -M argpos 0
 functions -M fetch  0
 
 while true; do
-  mode='mem[pc] / 100'
-  case $((mem[pc++] % 100)); in
+  mode='mem[++pc] / 100'
+  case $((mem[pc] % 100)); in
     99) exit 0                        ;;  # hlt
      9) base+='fetch()'               ;;  # rel
      1) store 'fetch() +  fetch()'    ;;  # add
