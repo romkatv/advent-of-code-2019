@@ -3,31 +3,23 @@
 emulate -L zsh
 setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
 
-local program
-read -r program
+local program="$(<&0)"
+[[ -n $program ]]
 
-function amp() (
-  { echo -E - $1; exec cat } | { ./icc $program; exit }
-)
+function amp() {
+  print -lr -- $*
+  exec ./icc $program
+}
 
 local -i res
-local x n fifo
-
-fifo="$(mktemp -u)"
-trap "rm -f ${(q)fifo} 2>/dev/null" INT TERM EXIT
+local x n
 
 for x in {56789..98765}; do
   [[ ${(j::)${(os::)x}} == 56789 ]] || continue
-  mkfifo $fifo
-  <$fifo amp $x[1] | amp $x[2] | amp $x[3] | amp $x[4] | amp $x[5] | {
-    echo 0
-    while read n; do
-      [[ $n == <1-> ]]
-      (( res > n )) || res=n
-      echo -E - $n
-    done
-  } >$fifo
-  rm $fifo
+  coproc cat | amp $x[2] | amp $x[3] | amp $x[4] | amp $x[5] | amp $x[1] 0
+  n="$(<&p >&p >&0 | tail -1)"
+  [[ $n == <1-> ]]
+  (( res > n )) || res=n
 done
 
 (( res > 0 ))
