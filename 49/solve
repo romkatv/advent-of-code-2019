@@ -1,8 +1,9 @@
 #!/usr/bin/env zsh
 
 emulate -L zsh
-setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
-setopt monitor no_hup no_check_jobs
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global #xtrace
+
+zmodload zsh/datetime
 
 function ascii-encode() {
   local c
@@ -17,17 +18,22 @@ function ascii-decode() {
     [[ $line == <1-127> ]]
     printf \\$(([##8]line))
   done
+  echo done
+  # exec 1>&-
 }
 
-{ coproc ascii-encode | ./icc "$(<&0)" | ascii-decode } >/dev/null
-trap "kill -- -$! 2>/dev/null" INT TERM EXIT
+local program="$(<&0)"
 
-function send() { print -rp -- $1 }
+function start() {
+  unsetopt xtrace
+  (( !${(%):-%j} )) || kill -- $! 2>/dev/null || true
+  { coproc ascii-encode | ./icc $program | ascii-decode } >/dev/null
+}
 
 function receive() {
   local line
   while true; do
-    read -rp line
+    read -rpt3 line
     [[ $line != (#b)$~1 ]] || break
   done
 }
@@ -38,69 +44,93 @@ local -rA reverse=(
   'south' 'north'
   'north' 'south')
 
-local -ra bad=(
-  'giant electromagnet'
-  'infinite loop'
-  'escape pod'
-  'molten lava'
-  'photons')
-
+local -a bad=()
+local -i survived
 local -a visited items checkpoint
 
-function explore() {
-  local line match mbegin mend
-  receive '\=\= (*) \=\='
-  local room=$match[1]
-  (( !visited[(I)$room] )) || return 0
-
-  visited+=$room
-
-  receive 'Doors here lead:'
-  local -a doors
+function take() {
+  local back=$1 room=$2 item=$3 line
+  (( !bad[(I)$item] )) || return 0
+  print -rp -- "take $item"
+  print -rp -- $back
+  local -F deadline='EPOCHREALTIME + 3'
   while true; do
-    read -rp line
-    [[ $line == (#b)'- '(*) ]] || break
-    doors+=$match[1]
-  done
-  (( $#doors ))
-
-  receive '(Items here:)|(Command?)'
-  if [[ -n $match[1] ]]; then
-    while true; do
-      read -rp line
-      [[ $line == (#b)'- '(*) ]] || break
-      local item=$match[1]
-      if (( !bad[(I)$item] )); then
-        send "take $item"
-        items+=$item
-      fi
-    done
-  fi
-
-  if [[ $room == 'Security Checkpoint' ]]; then
-    (( $# ))
-    (( $#doors == 2 ))
-    local back=$reverse[${*[-1]}]
-    (( ${#doors:#$back} == 1 ))
-    checkpoint=($* ${doors:#$back})
-    return
-  fi
-
-  local fwd
-  for fwd in $doors; do
-    local back=$reverse[$fwd]
-    [[ $back != ${*[-1]-} ]] || continue
-    send $fwd
-    explore $* $fwd
-    send $back
-    receive "\=\= $room \=\="
+    local -F tmout='deadline - EPOCHREALTIME'
+    if (( tmout <= 0 )) || ! read -rpt $tmout line || [[ $line == ("== $room =="|done) ]] ; then
+      bad+=$item
+      survived=0
+      break
+    elif [[ $line == '== '*' ==' ]]; then
+      print -rpl -- $reverse[$back]
+      receive "\=\= ${(b)room} \=\="
+      items+=$item
+      break
+    fi
   done
 }
 
-explore
+function explore() {
+  local line match mbegin mend back=${reverse[${*[-1]-}]-}
+  receive '\=\= (*) \=\='
+  local room=$match[1]
+
+  if (( !visited[(I)$room] )); then
+    visited+=$room
+
+    receive 'Doors here lead:'
+    local -a doors
+    while true; do
+      read -rpt3 line
+      [[ $line == (#b)'- '(*) ]] || break
+      [[ $match[1] == $back ]] || doors+=$match[1]
+    done
+
+    if [[ $room == 'Pressure-Sensitive Floor' ]]; then
+      receive '*(get in by typing ([0-9]#)|(lighter|heavier) than the detected)*'
+      if [[ -n $match[2] ]]; then
+        echo -E - $match[2]
+        exit
+      fi
+      (( $# ))
+      checkpoint=($*)
+      return
+    fi
+
+    receive '(Items here:)|(Command?)'
+    if [[ -n $match[1] ]]; then
+      [[ -n $back ]]
+      while true; do
+        read -rpt3 line
+        [[ $line == (#b)'- '(*) ]] || break
+        take $back $room $match[1]
+        (( survived )) || return 0
+      done
+    fi
+
+    local door
+    for door in $doors; do
+      print -rp -- $door
+      explore $* $door
+      (( survived )) || return 0
+      receive "\=\= ${(b)room} \=\="
+    done
+  fi
+
+  if [[ -n $back ]]; then
+    print -rp -- $back
+  fi
+}
+
+while (( ! survived )); do
+  survived=1
+  items=()
+  visited=()
+  start
+  explore
+done
+
 (( $#checkpoint > 1 && $#items > 0 ))
-send ${(F)checkpoint[1,-2]}
-receive '\=\= Security Checkpoint \=\='
+print -rpl -- $checkpoint[1,-2]
 
 function popcount() {
   local -i a=$1 res
@@ -123,7 +153,7 @@ functions -M popcount 1
       [[ ! -v "checked[$mask]" ]] || continue
       for k v in ${(kv)checked}; do
         if { (( mask & k == k ))    && [[ $v == lighter ]] } ||
-          { (( mask & k == mask )) && [[ $v == heavier ]] }; then
+           { (( mask & k == mask )) && [[ $v == heavier ]] }; then
           checked[$mask]=$v
           break
         fi
@@ -136,14 +166,14 @@ functions -M popcount 1
     for i in {1..$#items}; do
       (( diff & (1 << (i-1)) )) || continue
       if (( inventory & (1 << (i-1)) )); then
-        send "drop $items[i]"
+        print -rp -- "drop $items[i]"
       else
-        send "take $items[i]"
+        print -rp -- "take $items[i]"
       fi
     done
     (( inventory ^= diff, 1 ))
 
-    send $checkpoint[-1]
+    print -rp -- $checkpoint[-1]
     receive '*(get in by typing ([0-9]#)|(lighter|heavier) than the detected)*'
     if [[ -n $match[2] ]]; then
       echo -E - $match[2]
