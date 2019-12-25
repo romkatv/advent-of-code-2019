@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 
 emulate -L zsh
-setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global #xtrace
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
 
 zmodload zsh/datetime
 
@@ -19,15 +19,13 @@ function ascii-decode() {
     printf \\$(([##8]line))
   done
   echo done
-  # exec 1>&-
 }
 
 local program="$(<&0)"
 
 function start() {
-  unsetopt xtrace
   (( !${(%):-%j} )) || kill -- $! 2>/dev/null || true
-  { coproc ascii-encode | ./icc $program | ascii-decode } >/dev/null
+  coproc ascii-encode | ./icc $program | ascii-decode
 }
 
 function receive() {
