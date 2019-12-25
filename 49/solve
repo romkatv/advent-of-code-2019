@@ -2,8 +2,7 @@
 
 emulate -L zsh
 setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
-
-zmodload zsh/zpty
+setopt monitor no_hup no_check_jobs
 
 function ascii-encode() {
   local c
@@ -20,28 +19,17 @@ function ascii-decode() {
   done
 }
 
-() {
-  local program REPLY
-  zpty z "{ ascii-encode | ./icc ${(q)"$(<&0)"} | ascii-decode } 2>&3" 3>&2
-}
-trap 'zpty -d z' EXIT
+{ coproc ascii-encode | ./icc "$(<&0)" | ascii-decode } >/dev/null
+trap "kill -- -$! 2>/dev/null" INT TERM EXIT
 
-local line
-
-function readline() {
-  while true; do
-    zpty -r z line
-    line=${line%$'\r\n'}
-    [[ ! -o xtrace || $line != '+(zpty):'* ]] || continue
-    return
-  done
-}
-
-function send() { zpty -w z $1 }
+function send() { print -rp -- $1 }
 
 function receive() {
-  while [[ $line != (#b)$~1 ]] readline
-  line=
+  local line
+  while true; do
+    read -rp line
+    [[ $line != (#b)$~1 ]] || break
+  done
 }
 
 local -rA reverse=(
@@ -60,7 +48,7 @@ local -ra bad=(
 local -a visited items checkpoint
 
 function explore() {
-  local match mbegin mend
+  local line match mbegin mend
   receive '\=\= (*) \=\='
   local room=$match[1]
   (( !visited[(I)$room] )) || return 0
@@ -70,7 +58,7 @@ function explore() {
   receive 'Doors here lead:'
   local -a doors
   while true; do
-    readline
+    read -rp line
     [[ $line == (#b)'- '(*) ]] || break
     doors+=$match[1]
   done
@@ -79,7 +67,7 @@ function explore() {
   receive '(Items here:)|(Command?)'
   if [[ -n $match[1] ]]; then
     while true; do
-      readline
+      read -rp line
       [[ $line == (#b)'- '(*) ]] || break
       local item=$match[1]
       if (( !bad[(I)$item] )); then

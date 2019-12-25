@@ -2,7 +2,7 @@
 
 emulate -L zsh
 setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
-setopt prompt_percent no_prompt_subst pushd_silent no_multi_os
+setopt prompt_percent no_prompt_subst pushd_silent
 
 (( ARGC )) || set -- ${ZSH_SCRIPT:h}/<->(/:t)
 
@@ -30,7 +30,7 @@ for task; do
     <stderr.log >&2
     (( !ret )) || return ret
   else
-    ./solve <input 2>&1 >answer | tee stderr.log >&2
+    ./solve <input 3>&2 >answer 2>&3 2>stderr.log
   fi
   print -rP -- "Answer for %B$task%b: %F{green}${(V)$(<answer)//\%//%%}%f" >&2
   popd
