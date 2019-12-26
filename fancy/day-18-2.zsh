@@ -9,16 +9,11 @@ maze[c-w-1,c-w+1]="@#@"
 maze[c+0-1,c+0+1]="###"
 maze[c+w-1,c+w+1]="@#@"
 
-function kmask() {
-  local c=$maze[$1]
-  return '#c >= 97 && #c <= 122 ? 1 << (#c - 97) : 0'
+function mask() {
+  local c=$maze[$1] lb=${2:-97}
+  return '#c >= lb && #c < lb + 26 ? 1 << (#c - lb) : 0'
 }
-function dmask() {
-  local c=$maze[$1]
-  return '#c >= 65 && #c <= 90 ? 1 << (#c - 65) : 0'
-}
-functions -M kmask 1
-functions -M dmask 1
+functions -M mask 1 2
 
 function bfs() {
   local -A visited
@@ -57,7 +52,7 @@ function adjacent-cells() {
 function adjacent-nodes() {
   local -i d x
   for d x in ${=adjacent[$2]}; do
-    (( !dmask(x) || $1 & dmask(x) )) && reply+=($d $x)
+    (( !mask(x, 65) || $1 & mask(x, 65) )) && reply+=($d $x)
   done
 }
 
@@ -68,13 +63,13 @@ function adjacent-states() {
     if [[ ! -v rcache[$m] ]]; then
       rcache[$m]=''
       bfs "adjacent-nodes $1" ${*[i]} | while read -r d x; do
-        (( kmask(x) )) && rcache[$m]+="$d $x "
+        (( mask(x) )) && rcache[$m]+="$d $x "
       done
     fi
     for d x in ${=rcache[$m]}; do
-      (( kmask(x) & $1 )) && continue
+      (( mask(x) & $1 )) && continue
       local state=($*)
-      (( state[1] |= kmask(x), state[i] = x ))
+      (( state[1] |= mask(x), state[i] = x ))
       reply+=($d "$state")
     done
   done
@@ -83,7 +78,7 @@ function adjacent-states() {
 local x y d k
 for x in {1..$#maze}; do
   [[ $maze[x] == ('#'|'.') ]] && continue
-  (( doors[1 + ((x - 1) % w >= c % w) + 2 * ((x - 1) / w >= c / w)] |= dmask(x) ))
+  (( doors[1 + ((x-1) % w >= c%w) + 2 * ((x-1) / w >= c/w)] |= mask(x, 65) ))
   bfs "adjacent-cells $x" $x | while read -r d y; do
     [[ $maze[y] == '.' ]] || adjacent[$x]+="$d $y "
   done
