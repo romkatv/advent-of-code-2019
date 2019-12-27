@@ -16,19 +16,20 @@ function mask() {
 functions -M mask 1 2
 
 function bfs() {
-  local -A visited
+  local -A queued=("$*[2,-1]" 0)
   local state q=("0 $*[2,-1]")
   local -i dist i m
   while (( $#q > i )); do
     local -a node=(${=q[++i]})
     (( node[1] == m )) && m=0
-    if [[ ! -v visited[${node[2,-1]}] ]]; then
-      visited[${node[2,-1]}]=""
-      (( node[1] )) && echo -E - $node
+    if [[ $queued[${node[2,-1]}] == $node[1] ]]; then
+      [[ $node[1] == 0 ]] || echo -E - $node
       typeset -g reply=()
       $=1 $node[2,-1]
       for dist state in $reply; do
         (( dist += node[1] ))
+        (( dist < ${queued[$state]-dist+1} )) || continue
+        queued[$state]=$dist
         q+="$dist $state"
         (( dist < m )) && m=0
       done
