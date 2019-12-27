@@ -17,69 +17,61 @@ functions -M mask 1 2
 
 function bfs() {
   local -A queued=("$*[2,-1]" 0)
-  local state q=("0 $*[2,-1]")
-  local -i dist i m
+  local q=("0 $*[2,-1]")
+  local -i i lim
+  function visit() {
+    local -i dist="node[1] + $1"
+    (( dist < ${queued[${*[2,-1]}]-dist+1} )) || return
+    queued[${*[2,-1]}]=$dist
+    q+="$dist ${*[2,-1]}"
+    (( dist < lim )) && lim=0
+  }
   while (( $#q > i )); do
     local -a node=(${=q[++i]})
-    (( node[1] == m )) && m=0
-    if [[ $queued[${node[2,-1]}] == $node[1] ]]; then
-      local reply=()
-      $=1 $node
-      for dist state in $reply; do
-        (( dist += node[1] ))
-        (( dist < ${queued[$state]-dist+1} )) || continue
-        queued[$state]=$dist
-        q+="$dist $state"
-        (( dist < m )) && m=0
-      done
-    fi
-    if (( m == 0 )); then
+    (( node[1] == lim )) && lim=0
+    [[ $queued[${node[2,-1]}] == $node[1] ]] && $=1 $node
+    if (( lim == 0 )); then
       q=(${(n)q:$i})
-      m=${q[$#q/16+1]%% *}
+      lim=${q[$#q/24+1]%% *}
       i=0
     fi
   done
 }
 
-function adjacent-cells() {
+function visit-cells() {
   [[ $maze[$3] == '.' || $2 == 0 ]] || adjacent[$1]+="$2 $3 "
   [[ $maze[$3] == '.' || $1 == $3 ]] || return
   for 1 in -1 1 -$w $w; do
-    [[ $maze[$1+$3] == '#' ]] || reply+=(1 $(($1+$3)))
+    [[ $maze[$1+$3] == '#' ]] || visit 1 $(($1+$3))
   done
 }
 
-function adjacent-nodes() {
+function visit-nodes() {
   (( $3 && mask($4) )) && rcache[$1]+="$3 $4 "
   for 3 4 in ${=adjacent[$4]}; do
-    (( !mask($4, 65) || $2 & mask($4, 65) )) && reply+=($3 $4)
+    (( !mask($4, 65) || $2 & mask($4, 65) )) && visit $3 $4
   done
 }
 
-function adjacent-states() {
-  echo -E - $* >&2
+function visit-states() {
   local -i i d x k=$2
+  (( k == 1 << 26 - 1 )) && { echo $1; exit }
   for i in {3..$#}; do
     local m="$((k & doors[i-2])):${*[i]}"
     if [[ ! -v rcache[$m] ]]; then
       rcache[$m]=''
-      bfs "adjacent-nodes $m $k" ${*[i]}
+      bfs "visit-nodes $m $k" ${*[i]}
     fi
     for d x in ${=rcache[$m]}; do
-      (( mask(x) & k )) && continue
-      reply+=($d "$((k | mask(x)))${${i:#3}:+ }${*[3,i-1]} $x${${i:#$#}:+ }${*[i+1,-1]}")
+      (( mask(x) & k )) || visit $d $((k | mask(x))) ${*[3,i-1]} $x ${*[i+1,-1]}
     done
   done
-  #exit
-  (( $#reply )) && return
-  echo $1
-  exit
 }
 
 for x in {1..$#maze}; do
   [[ $maze[x] == ('#'|'.') ]] && continue
   (( doors[1 + ((x-1) % w >= c%w) + 2 * ((x-1) / w >= c/w)] |= mask(x, 65) ))
-  bfs "adjacent-cells $x" $x
+  bfs "visit-cells $x" $x
 done
 
-bfs adjacent-states 0 $((c-w-1)) $((c-w+1)) $((c+w-1)) $((c+w+1))
+bfs visit-states 0 $((c-w-1)) $((c-w+1)) $((c+w-1)) $((c+w+1))
