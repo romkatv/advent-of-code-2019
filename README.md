@@ -91,7 +91,7 @@ Number please: 12
 ```
 
 The first argument is an Intcode program. All Intcode programs are comma-separated integers. Intcode
-Computer communicates with the outside world by reading and writing integers. In this example the
+Computer communicates with the outside world by reading and printing integers. In this example the
 program reads an integer and prints its square. The second (optional) argument of `icc` is a prompt
 that gets printed whenever `icc` wants to read a number. It lets you know when `icc` is waiting for
 input as opposed to being busy computing.
