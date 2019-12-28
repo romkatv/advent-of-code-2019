@@ -12,7 +12,7 @@ local n
 local -i res c
 
 for ((n = min; n <= max; ++n)); do
-  (( n[6] >= n[5] && n[5] >= n[4] && n[4] >= n[3] && n[3] >= n[2] && n[2] >= n[1] )) || continue
+  [[ ${(j::)${(os::)n}} == $n ]] || continue
   for c in {1..9}; do
     [[ .$n. == *[^$c]${c}${c}[^$c]* ]] || continue
     res+=1
