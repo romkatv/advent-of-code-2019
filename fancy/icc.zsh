@@ -1,16 +1,19 @@
 #!/usr/bin/env zsh
 #
-# Usage: icc.zsh "intcode"
+# Usage: icc.zsh <intcode> [prompt]
 #
 # Input/output instructions use stdin/stdout.
 #
-# Example: icc.zsh "3,0,102,2,0,0,4,0,99" <<<"21"
-# Output:  42
+# If the second argument is specified, it's passed through `eval`
+# before reading the next number from stdin.
+#
+# Example: icc.zsh "3,0,2,0,0,0,4,0,99" "echo -n 'Number please: '"
+#
+# Enter a number and press ENTER. The program will print the square
+# of the number and exit.
 
-local mem
-local -i pc base mode REPLY
-
-IFS=, read -rA mem <<<${1:?usage: icc.zsh <intcode>}
+local mem=(${(s:,:)1:?usage: icc.zsh <intcode> [prompt]})
+local -i pc base mode in
 
 function argpos() {
   local -i m='mode % 10'
@@ -40,7 +43,7 @@ while true; do
      8) store 'fetch() == fetch()'    ;;  # eq
      5) jumpc 'fetch() != 0' 'fetch()';;  # jnz
      6) jumpc 'fetch() == 0' 'fetch()';;  # jz
-     3) read -r; store REPLY          ;;  # in
+     3) eval $2; read -r in; store in ;;  # in
      4) echo - $((fetch()))           ;;  # out
   esac
 done
