@@ -428,7 +428,7 @@ pointers or references. This impoverished landscape makes it difficult to implem
 algorithms.
 
 In the end, I've completed all puzzles in Zsh on the day there were published without hints or
-looking up algorithms. On one hard, the puzzles were much easier than I expected, allowing me to
+looking up algorithms. On one hand, the puzzles were much easier than I expected, allowing me to
 solve them in C++ with very little effort. On the other hand, porting to Zsh proved more challenging
 than I thought. These two trends canceled each other out.
 
