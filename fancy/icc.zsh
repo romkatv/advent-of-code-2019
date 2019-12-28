@@ -4,16 +4,16 @@
 #
 # Input/output instructions use stdin/stdout.
 #
-# If the second argument is specified, it's passed through `eval`
-# before reading the next number from stdin.
+# If the second argument is specified, it's printed before reading
+# the next number from stdin.
 #
-# Example: icc.zsh "3,0,2,0,0,0,4,0,99" "echo -n 'Number please: '"
+# Example: icc.zsh "3,0,2,0,0,0,4,0,99" "Number please: "
 #
 # Enter a number and press ENTER. The program will print the square
 # of the number and exit.
 
 local mem=(${(s:,:)1:?usage: icc.zsh <intcode> [prompt]})
-local -i pc base mode num
+local -i pc base mode n
 
 function argpos() {
   local -i m='mode % 10'
@@ -43,7 +43,7 @@ while true; do
      8) store 'fetch() == fetch()'    ;;  # eq
      5) jumpc 'fetch() != 0' 'fetch()';;  # jnz
      6) jumpc 'fetch() == 0' 'fetch()';;  # jz
-     3) eval $2; read num; store num  ;;  # in
+     3) echo -nE - $2; read n; store n;;  # in
      4) echo - $((fetch()))           ;;  # out
   esac
 done
