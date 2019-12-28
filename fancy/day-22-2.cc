@@ -2,7 +2,7 @@
 #include <iostream>
 #include <string>
 
-const int64_t m = 119315717514047, n=101741582076661, needle=2020;
+const int64_t m = 119315717514047, n = 101741582076661, needle = 2020;
 
 const auto combine = [](auto f, int64_t unit, int64_t a, int64_t b) {
   for (int64_t r = unit;; b >>= 1, a = f(a, a)) {
