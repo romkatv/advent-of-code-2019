@@ -13,7 +13,7 @@
 # of the number and exit.
 
 local mem=(${(s:,:)1:?usage: icc.zsh <intcode> [prompt]})
-local -i pc base mode in
+local -i pc base mode num
 
 function argpos() {
   local -i m='mode % 10'
@@ -43,7 +43,7 @@ while true; do
      8) store 'fetch() == fetch()'    ;;  # eq
      5) jumpc 'fetch() != 0' 'fetch()';;  # jnz
      6) jumpc 'fetch() == 0' 'fetch()';;  # jz
-     3) eval $2; read -r in; store in ;;  # in
+     3) eval $2; read num; store num  ;;  # in
      4) echo - $((fetch()))           ;;  # out
   esac
 done
