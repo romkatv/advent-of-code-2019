@@ -159,11 +159,13 @@ the kind of computation required by Advent of Code puzzles the answer is *very s
 [direct translation](https://github.com/romkatv/advent-of-code-2019/blob/master/fancy/icc-pretty.cc)
 of my Zsh Intcode Computer to C++ is between 3000 and 25000 faster, depending on the program. An
 [optimized C++ implementation](
-  https://github.com/romkatv/advent-of-code-2019/blob/master/fancy/icc-fast.cc) is 3 times faster
-still. \[This is likely the fastest Intcode Computer in the world. I had a lot of fun writing it.
-Take a look if you are into C++ or high-performance code in general. It's only 61 lines long and
-very readable. I've posted a short explanation of how it works in [this comment](
-  https://www.reddit.com/r/adventofcode/comments/ed5bxv/intcode_primality_generator/fbghid2/) on
+https://github.com/romkatv/advent-of-code-2019/blob/master/fancy/icc-fast.cc) is 3 times faster
+still. \[This is likely [the fastest Intcode Computer](
+https://www.reddit.com/r/adventofcode/comments/egq9xn/2019_day_9_intcode_benchmarking_suite/fcar0oh)
+in the world. I had a lot of fun writing it. Take a look if you are into C++ or high-performance
+code in general. It's only 65 lines long and very readable. I've posted a short explanation of how
+it works in [this comment](
+https://www.reddit.com/r/adventofcode/comments/ed5bxv/intcode_primality_generator/fbghid2/) on
 reddit.\]
 
 I was committed to finding a solution to every puzzle that would run in Zsh in less than a minute
@@ -232,7 +234,7 @@ position `k*c + b` for some `k` and `b`. Composition of linear functions is itse
 function, which means that applying all 100 shuffling steps from the input file will move each card
 according to some linear function. Composing this function with itself `n` times using the simple,
 elegant and efficient [Exponentiation by squaring](
-  https://en.wikipedia.org/wiki/Exponentiation_by_squaring) algorithm will once again give us a
+https://en.wikipedia.org/wiki/Exponentiation_by_squaring) algorithm will once again give us a
 linear function. This isn't the function we need though. In part 2 we are asked for the *inverse*
 transformation. How do you invert `k*c + b` where all numbers are integers modulo `m`?
 
