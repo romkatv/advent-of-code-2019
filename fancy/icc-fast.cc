@@ -17,25 +17,9 @@
 #include <vector>
 
 static std::vector<int64_t> mem;
-static int64_t pc, base, mode;
+static int64_t size, pc, base, mode;
 
-template <class F, int Arity, int Mode>
-void run() {
-  std::array<int64_t, Arity> args;
-  auto set_arg = [&](int i, int m) {
-    switch (Mode / m % 10) {
-      case 1: args[i] =            pc + i + 1 ; return;
-      case 0: args[i] =        mem[pc + i + 1]; break;
-      case 2: args[i] = base + mem[pc + i + 1]; break;
-    }
-    if (mem.size() <= args[i]) mem.resize(args[i] << 1);
-  };
-  if (Arity > 0) set_arg(0, 1);
-  if (Arity > 1) set_arg(1, 10);
-  if (Arity > 2) set_arg(2, 100);
-  pc += Arity + 1;
-  std::apply([=](auto... pos) { (+*static_cast<F*>(0))(mem[pos]...); }, args);
-}
+template <class F, int Arity, int Mode> void run();
 
 template <int N = -1, int Mode = -1, class Table, class F, class... Args>
 constexpr void op(Table& table, int opcode, F f, void (*)(Args...) = 0) {
@@ -64,6 +48,26 @@ constexpr auto table = []() {
   op(t, 99, [](                                ) { std::exit(0)          ; });  // hlt
   return t;
 }();
+
+template <class F, int Arity, int Mode>
+void run() {
+  std::array<int64_t, Arity> args;
+  auto set_arg = [&](int i, int m) {
+    switch (Mode / m % 10) {
+      case 1: args[i] =            pc + i + 1 ; return;
+      case 0: args[i] =        mem[pc + i + 1]; break;
+      case 2: args[i] = base + mem[pc + i + 1]; break;
+    }
+    auto grow = [](int64_t n) __attribute__((noinline)) { mem.resize(n << 1); };
+    if (mem.size() <= args[i]) grow(args[i]);
+  };
+  if (Arity > 0) set_arg(0, 1);
+  if (Arity > 1) set_arg(1, 10);
+  if (Arity > 2) set_arg(2, 100);
+  pc += Arity + 1;
+  std::apply([=](auto... pos) { (+*static_cast<F*>(0))(mem[pos]...); }, args);
+  table[mem[pc]]();  // optimization-level dependent; remove this line if segfaulting
+};
 
 int main(int argc, char** argv) {
   for (std::istringstream ss(argv[1]); mem.push_back(0), ss >> mem.back(); ss.get()) {}
