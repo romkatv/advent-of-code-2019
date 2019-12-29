@@ -1,0 +1,59 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
+
+local -i grid
+
+() {
+  local c
+  tac | rev | while read -rku0 c; do
+    case $c in
+      '#') grid=$((grid << 1 | 1));;
+      '.') grid=$((grid << 1 | 0));;
+      $'\n');;
+      *) exit 1;;
+    esac
+  done
+}
+
+function mask() {
+  local -i x=$1 y=$2
+  unsetopt err_exit
+  return '1 << (5*y + x)'
+}
+
+function get() {
+  local -i x=$1 y=$2
+  unsetopt err_exit
+  return 'x >= 0 && x < 5 && y >= 0 && y < 5 && grid & mask(x, y)'
+}
+
+function neighbours() {
+  local -i x=$1 y=$2
+  unsetopt err_exit
+  return 'get(x-1, y) + get(x+1, y) + get(x, y-1) + get(x, y+1)'
+}
+
+functions -M mask 2
+functions -M get 2
+functions -M neighbours 2
+
+local -A seen
+local -i x y new=grid
+
+while [[ ! -v seen[$grid] ]]; do
+  seen[$grid]=''
+  for x in {0..4}; do
+    for y in {0..4}; do
+      local -i b='get(x, y)'
+      local -i n='neighbours(x, y)'
+      if (( b && n != 1 || !b && (n == 1 || n == 2) )); then
+        (( new ^= mask(x, y), 1 ))
+      fi
+    done
+  done
+  grid=new
+done
+
+echo -E - $grid
