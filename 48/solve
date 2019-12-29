@@ -1,0 +1,87 @@
+#!/usr/bin/env zsh
+
+emulate -L zsh
+setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
+
+local -a grids
+
+() {
+  local c
+  while read -rku0 c; do
+    case $c in
+      '#')       grids[101]=$((grids[101] << 1 | 1));;
+      $'\n'|'.') grids[101]=$((grids[101] << 1 | 0));;
+      *) exit 1;;
+    esac
+  done
+  (( grids[101] <<= 6 ))
+}
+
+function mask() {
+  unsetopt err_exit
+  return "1 << (6 * $2 + $1 + 7)"
+}
+
+function get()  {
+  unsetopt err_exit
+  return "($3 & mask($1, $2)) != 0"
+}
+
+function neighbours() {
+  local -i x=$1 y=$2 prev=$3 cur=$4 next=$5 i
+  local -i res='get(x-1, y, cur) + get(x+1, y, cur) + get(x, y-1, cur) + get(x, y+1, cur)'
+  if (( x == 2 && y == 1 )); then
+    for i in {0..4}; do res+='get(i, 0, next)'; done
+  elif (( x == 1 && y == 2 )); then
+    for i in {0..4}; do res+='get(0, i, next)'; done
+  elif (( x == 3 && y == 2 )); then
+    for i in {0..4}; do res+='get(4, i, next)'; done
+  elif (( x == 2 && y == 3 )); then
+    for i in {0..4}; do res+='get(i, 4, next)'; done
+  else
+    (( y != 0 )) || res+='get(2, 1, prev)'
+    (( y != 4 )) || res+='get(2, 3, prev)'
+    (( x != 0 )) || res+='get(1, 2, prev)'
+    (( x != 4 )) || res+='get(3, 2, prev)'
+  fi
+  unsetopt err_exit
+  return res
+}
+
+functions -M mask 2
+functions -M get 3
+functions -M neighbours 5
+
+() {
+  local -i x y z i
+  local -a new_grids
+  for i in {2..201}; do
+    for z in {$((101-i/2))..$((101+i/2))}; do
+      local -i prev='grids[z-1]' cur='grids[z]' next='grids[z+1]'
+      local -i new_cur=cur
+      for x in {0..4}; do
+        for y in {0..4}; do
+          (( x != 2 || y != 2 )) || continue
+          local -i b='get(x, y, cur)'
+          local -i n='neighbours(x, y, prev, cur, next)'
+          if (( b && n != 1 || !b && (n == 1 || n == 2) )); then
+            (( new_cur ^= mask(x, y), 1 ))
+          fi
+        done
+      done
+      new_grids[z]=$new_cur
+    done
+    grids=("${new_grids[@]}")
+  done
+}
+
+local -i x y res grid
+for grid in $grids; do
+  for x in {0..4}; do
+    for y in {0..4}; do
+      res+='get(x, y, grid)'
+    done
+  done
+done
+
+echo -E - $res
