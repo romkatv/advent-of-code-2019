@@ -17,7 +17,7 @@
 #include <vector>
 
 static std::vector<int64_t> mem;
-static int64_t size, pc, base, mode;
+static int64_t n, pc, base, mode;
 
 template <class F, int Arity, int Mode> void run();
 
@@ -58,8 +58,8 @@ void run() {
       case 0: args[i] =        mem[pc + i + 1]; break;
       case 2: args[i] = base + mem[pc + i + 1]; break;
     }
-    auto grow = [](int64_t n) __attribute__((noinline)) { mem.resize(n << 1); };
-    if (mem.size() <= args[i]) grow(args[i]);
+    auto grow = [](int64_t p) __attribute__((noinline)) { mem.resize(n = p << 1); };
+    if (args[i] >= n) grow(args[i]);
   };
   if (Arity > 0) set_arg(0, 1);
   if (Arity > 1) set_arg(1, 10);
@@ -70,6 +70,6 @@ void run() {
 };
 
 int main(int argc, char** argv) {
-  for (std::istringstream ss(argv[1]); mem.push_back(0), ss >> mem.back(); ss.get()) {}
+  for (std::istringstream ss(argv[1]); mem.resize(++n), ss >> mem.back(); ss.get()) {}
   while (true) table[mem[pc]]();
 }
