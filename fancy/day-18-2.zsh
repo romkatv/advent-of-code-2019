@@ -65,7 +65,7 @@ function visit-states() {
       bfs "visit-nodes $m $k" ${*[i]}
     fi
     for d x in ${=rcache[$m]}; do
-      (( mask(x) & k )) || visit $d $((k | mask(x))) ${*[3,i-1]} $x ${*[i+1,-1]}
+      (( mask(x) & k )) || visit $d $((k | mask(x))) $*[3,i-1] $x $*[i+1,-1]
     done
   done
 }
