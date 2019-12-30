@@ -18,7 +18,7 @@ The first few days of Advent of Code featured very simple puzzles. Direct transl
 statement to Zsh was all that was required from me. There was a lot of headroom for inefficient
 implementations, which allowed me to use concise solutions that may not be available in many
 "proper" programming languages. For example, the day 4 puzzle asked to count numbers between `min`
-and `max` whose decimal digits are non-decreasing and that contain at least one digit that follow
+and `max` whose decimal digits are non-decreasing and that contain at least one digit that follows
 itself. This is just 4 lines in Zsh:
 
 ```zsh
@@ -33,12 +33,12 @@ the elements of the resulting array. If the result isn't the same as `n`, we don
 this number as it doesn't satisfy the monotonicity requirement. `$n =~ '(.)\1'` checks if the number
 contains two identical consecutive digits.
 
-Solutins that use Zsh-specific "vectorized" constructs not found in other languages are often more
+Solutions that use Zsh-specific "vectorized" constructs not found in other languages are often more
 efficient than traditional algorithms translated one-to-one to Zsh. Cutting down on the number of
 operations that have to be interpreted is very important for performance.
 
-The highlight of Advent of Code 2019 was *Intcode* -- machine code for the fictional Intcode
-Computer. Participants were to build over 3 days a Virtual Machine that could execute programs
+The highlight of Advent of Code 2019 was *Intcode* -- machine code for the fictional *Intcode
+Computer*. Participants were to build over 3 days a Virtual Machine that could execute programs
 written in Intcode. Here's my final version:
 
 ```zsh
@@ -81,8 +81,8 @@ while true; do
 done
 ```
 
-I saved this in an executable file called `icc` -- for **I**nt**C**ode **C**omputer -- and called it
-whenever puzzles required execution of Intcode programs. Here's an example:
+I saved this code in an executable file called `icc` -- for **I**nt**C**ode **C**omputer -- and
+called it whenever puzzles required execution of Intcode programs. Here's an example:
 
 ```shell
 $ icc "3,0,2,0,0,0,4,0,99" "Number please: "
@@ -103,7 +103,7 @@ demanded by Advent of Code is fairly low. It'll get higher as December progresse
 
 The implementation of Intcode Computer wasn't a standalone exercise. Every other puzzle required
 participants to *run* Intcode programs on their own Intcode Virtual Machine. These were my favorite
-puzzles! For example, on day 7 you were given an Intcode Program (`3,8,1001,8,10,..` and so on, for
+puzzles! For example, on day 7 we were given an Intcode Program (`3,8,1001,8,10,..` and so on, for
 about 1kB) that implements an amplifier. In fact, it implements 5 different amplifiers! On start,
 the program asks which amplifier to use, which has to be a number between 5 and 9. After that it
 continuously reads strength of an input signal and prints the strength of the (amplified) output
@@ -121,7 +121,7 @@ of this kind:
                                                      (to thrusters)
 ```
 
-(Diagram from https://adventofcode.com/2019/day/7, part 2.)
+*(Diagram from https://adventofcode.com/2019/day/7, part 2.)*
 
 Here 5 different amplifiers are connected back-to-back, with the output of the last amplifier being
 fed back to the first. Letters `A` through `E` are placeholders for numbers `5` through `9`, each
@@ -142,17 +142,17 @@ done | sort | tail -1
 ```
 
 `amp [arg]...` starts an amplifier and sends it predefined integers as first inputs. The loop goes
-over all permutations of `56789` and runs the circuit for each of them. After the loop we get the
-maximum signal value with another `sort | tail -1` pipeline.
+over all permutations of `56789` and runs the circuit for each of them. After the loop, the maximum
+signal value is acquired with `sort | tail -1` pipeline.
 
-In C++ I would use `next_permutation` to go over all permutations. Rather than implementing this
-algorithm in Zsh, I'm iterating over all numbers between 56789 and 98765 and skipping the wrong
+In C++ I would use `std::next_permutation` to go over all permutations. Rather than implementing
+this algorithm in Zsh, I'm iterating over all numbers between 56789 and 98765 and skipping the wrong
 ones. `${(j::)${(os::)n}}` is the familiar construct we've met in the solution to the day 4 puzzle.
 Useful once more!
 
 So far, all problems were recipes. You obtain the solution by following the instructions step by
 step. Eventually problems turned into proper puzzles whose statements describe the solution only
-indirectly leaving it up to you to figure out how to obtain it.
+indirectly, leaving it up to you to figure out how to obtain it.
 
 As far as programming languages go, Zsh is slow. How slow exactly depends on the workload but for
 the kind of computation required by Advent of Code puzzles the answer is *very slow*. A
@@ -172,11 +172,11 @@ I was committed to finding a solution to every puzzle that would run in Zsh in l
 (the same algorithm would run in a few milliseconds in C++). However, *getting* to the solution
 while using nothing but Zsh felt like too much. I settled on the following routine. Once I wake up
 in the morning I would get to my computer, read the new Advent of Code puzzle and solve it as
-quickly as possible in C++. When using a reasonably fast programming language, the first part is
-always trivial. Just literally do what the problem statement says and you'll get the answer. My goal
-here was not find a solution that I would eventually be porting to Zsh but simply to unlock the
-second part of the puzzle. Every day's puzzle has two parts in it and you cannot see the harder
-second part until you solve the first.
+quickly as possible in C++. When using a reasonably fast programming language, the first part of
+each puzzle is trivial. Just literally do what the problem statement says and you'll get the answer.
+My goal here was not to find a solution that I would eventually be porting to Zsh but simply to
+unlock the second part of the puzzle. Every day's puzzle has two parts in it and you cannot see the
+harder second part until you solve the first.
 
 Let's consider the day 22 puzzle. In part 1 we were given a sorted deck of 10007 cards numbered from
 0 to 10006. The personal input to the puzzle is a file with 100 lines of the following sort:
@@ -215,14 +215,15 @@ int main() {
 
 This C++ program reads the input file with shuffling steps line by line and shuffles the deck as
 described by the spec. No thinking required, just typing away. By using C++ I was able to unlock
-the second part of the puzzle in just a few minutes thanks to C++ being fast, to my experience
-in using this language, and my development setup (debugger is invaluable!).
+the second part of the puzzle in just a few minutes thanks to C++ being fast, my experience in using
+this language, and my development setup (debugger is invaluable!).
 
 The second part of this puzzle asks to find the card that ends up at position 2020 in the deck of
 119315717514047 cards after 101741582076661 rounds of applying all shuffling rules to it (below, `m`
-and `n` respectively). The second part in Advent of Code often makes the problem harder in a way that
-renders the straightfoward algorithm used to solve part 1 inapplicable. Day 22 was no exception. C++
-or not, you cannot create an array with 1e14 elements, or to loop for 1e14 iterations.
+and `n` respectively). The second part of many Advent of Code puzzles makes the problem harder in a
+way that renders the straightfoward algorithm used to solve part 1 inapplicable. Day 22 was no
+exception. C++ or not, you cannot create an array with 100 trillion elements, or to loop for 100
+trillion iterations.
 
 After reading the second part of the problem I would go take a shower. While showring I would think.
 On all days except one I knew how to solve the problem in C++ by the time I finished showering.
@@ -233,7 +234,7 @@ Back to our terradeck. Every shuffling step can be expressed as a linear functio
 position `k*c + b` for some `k` and `b`. Composition of linear functions is itself a linear
 function, which means that applying all 100 shuffling steps from the input file will move each card
 according to some linear function. Composing this function with itself `n` times using the simple,
-elegant and efficient [Exponentiation by squaring](
+elegant and efficient [exponentiation by squaring](
 https://en.wikipedia.org/wiki/Exponentiation_by_squaring) algorithm will once again give us a
 linear function. This isn't the function we need though. In part 2 we are asked for the *inverse*
 transformation. How do you invert `k*c + b` where all numbers are integers modulo `m`?
@@ -242,7 +243,7 @@ Up until this point things were pretty straightforward. You have to use an algor
 well-known and easy to implement. The next step requires a bit of math and I've heard from others
 that not having learned algebra or having forgotten it makes this puzzle very difficult.
 
-Before showering, I've checked if the two huge numbers in the problem statement are prime. They both
+Before showering, I'd checked if the two huge numbers in the problem statement are prime. They both
 are. I remembered from high school that integers modulo prime number make a *field*, meaning
 that each element except zero has multiplicative inverse. Since the field is finite, `a ** m = a`
 for all `a`. This implies `1 / a = a ** (m-2)` for all non-zero `a`. This insight allows us to
@@ -314,19 +315,34 @@ integer x='mul(b, pow(k-1, m-2))'
 echo $((add(mul(add(x, 2020), pow(pow(k, m-2), n)), -x)))
 ```
 
-Note that by day 22 solutions become longer. There are 26 lines of code here. There are a few
-solutions that are longer still with the longest on day 18. On this day we were to navigate 4
-disconnected mazes simultaneously with 4 robots. Spread across the mazes are 26 doors (marked with
-capital letters from *A* to *Z*) with corresponding keys (*a* to *z*). Initially all doors are
-locked and cannot be passed through. Once one of the robots grabs a key, the corresponding door gets
-unlocked. The task is figure out the shortest number of steps robots can take to grab all keys. The
-map of the 4 mazes, including the positions of all doors and keys, is the input file.
+Having a Zsh solution to part 2, it was usually trivial to devise solution to part 1 from it.
 
-This is one of a few problems that was very easy in C++ but resisted my attempts to make it run fast
+```zsh
+integer m=10007 x=2019
+while read -r s; do
+  case $s in
+    *inc*) (( x = x * ${s##* }       % m ));;
+    *new*) (( x = (m + m - x - 1)    % m ));;
+    *cut*) (( x = (m + x - ${s##* }) % m ));;
+  esac
+done
+echo $x
+```
+
+Note that by day 22 solutions became longer. Part 2 required 26 lines of code to solve. There were
+a few puzzles that required even more coding, with the longest solution for me falling on day 18. On
+this day we were to navigate 4 disconnected mazes simultaneously with 4 robots. Spread across the
+mazes are 26 doors (marked with capital letters from *A* to *Z*) with corresponding keys (*a* to
+*z*). Initially all doors are locked and cannot be passed through. Once one of the robots grabs a
+key, the corresponding door gets unlocked. The task is to figure out the shortest number of steps
+robots can take to grab all keys. The map of the 4 mazes, including the positions of all doors and
+keys, is the input file.
+
+This is one of a few problems that was easy in C++ but resisted my attempts to make it run fast
 enough in Zsh. My first port to Zsh was at least a million times slower than C++. Yikes! Normally I
 would go back to C++ and find a more efficient algorithm. This time it wasn't an option as I was
-certain that the asymptotic complexity is already optimal. All optimizations would have to come from
-more efficient coding. Not an easy task for an initiate in Zsh scripting like myself.
+certain that the asymptotic complexity was already optimal. All optimizations had to come from more
+efficient coding. Not an easy task for an initiate in Zsh scripting like myself.
 
 Here's my final gnarly solution at whooping 75 lines. Took over two hours. I don't recommend reading
 it. I'm posting it to show the upper bound on the size and complexity of my solutions.
@@ -410,9 +426,9 @@ bfs visit-states 0 $((c-w-1)) $((c-w+1)) $((c+w-1)) $((c+w+1))
 ```
 
 The struggle to implement efficient algorithms in Zsh taught me something new about the language.
-The most important finding is that access into arrays and strings is not constant time. `v=a[i]` or
-`a[i]=v` is 2000 times faster if `a` has length 10 than if it has length 10 million. In a few cases
-I sharded my strings and arrays to speed up access.
+The most important finding is that access into arrays and strings is not constant time. `v=a[i]` and
+`a[i]=v` are 2000 times faster if `a` has length 10 than if it has length 10 million. In a few cases
+I sharded my strings and arrays into 64-element chunks to speed up access.
 
 ```zsh
 # `sharded-set a i v` is the equivalent of `a[i]=v`.
