@@ -1,4 +1,6 @@
 #!/usr/bin/env zsh
+#
+# Usage: ./day-22-2.zsh <<<"your puzzle input"
 
 integer m=119315717514047 n=101741582076661 needle=2020
 

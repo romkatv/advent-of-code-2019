@@ -1,4 +1,6 @@
 #!/usr/bin/env zsh
+#
+# Usage: ./day-18-2.zsh <<<"your puzzle input"
 
 local -i x w=81 h=81 c='40*81+41'
 local maze="${$(<&0)//$'\n'}"
