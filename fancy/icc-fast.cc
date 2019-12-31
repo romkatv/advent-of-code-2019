@@ -9,6 +9,7 @@
 // Output:  42
 
 #include <stdint.h>
+#include <sys/mman.h>
 #include <array>
 #include <cstdlib>
 #include <iostream>
@@ -16,8 +17,9 @@
 #include <tuple>
 #include <vector>
 
-static std::vector<int64_t> mem;
-static int64_t n, pc, base, mode;
+static int64_t pc, base, mode;
+static int64_t* mem = static_cast<int64_t*>(mmap(
+    0, 1LL << 40, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_NORESERVE, 0, 0));
 
 template <class F, int Arity, int Mode> void run();
 
@@ -54,22 +56,20 @@ void run() {
   std::array<int64_t, Arity> args;
   auto set_arg = [&](int i, int m) {
     switch (Mode / m % 10) {
-      case 1: args[i] =            pc + i + 1 ; return;
+      case 1: args[i] =            pc + i + 1 ; break;
       case 0: args[i] =        mem[pc + i + 1]; break;
       case 2: args[i] = base + mem[pc + i + 1]; break;
     }
-    auto grow = [](int64_t p) __attribute__((noinline)) { mem.resize(n = p << 1); };
-    if (args[i] >= n) grow(args[i]);
   };
   if (Arity > 0) set_arg(0, 1);
   if (Arity > 1) set_arg(1, 10);
   if (Arity > 2) set_arg(2, 100);
   pc += Arity + 1;
   std::apply([=](auto... pos) { (+*static_cast<F*>(0))(mem[pos]...); }, args);
-  table[mem[pc]]();  // optimization-level dependent; remove this line if segfaulting
+  table[mem[pc]]();
 };
 
 int main(int argc, char** argv) {
-  for (std::istringstream ss(argv[1]); mem.resize(++n), ss >> mem.back(); ss.get()) {}
-  while (true) table[mem[pc]]();
+  for (std::istringstream ss(argv[1]); ss >> mem[pc++]; ss.get()) {}
+  table[mem[pc = 0]]();
 }
