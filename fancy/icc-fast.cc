@@ -16,8 +16,7 @@
 #include <sstream>
 #include <tuple>
 
-static int64_t pc, base, mode;
-static int64_t* mem = static_cast<int64_t*>(mmap(
+static int64_t pc, base, *mem = static_cast<int64_t*>(mmap(
     0, 1LL << 40, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_NORESERVE, 0, 0));
 
 template <class F, int Arity, int Mode> void run();
