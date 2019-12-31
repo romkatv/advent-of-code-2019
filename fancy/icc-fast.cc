@@ -15,7 +15,6 @@
 #include <iostream>
 #include <sstream>
 #include <tuple>
-#include <vector>
 
 static int64_t pc, base, mode;
 static int64_t* mem = static_cast<int64_t*>(mmap(
