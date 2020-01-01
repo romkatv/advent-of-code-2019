@@ -8,8 +8,8 @@ local -ra tiles=(0 7 4 2 1)
 local -rA keys=(a -1 d 1)
 
 trap 'echoti cnorm; stty echo' EXIT INT QUIT ILL PIPE TERM ZERR
-coproc ./icc.zsh ${1/#1/2} $'in\n'
 echoti clear; echoti civis; stty -echo
+coproc ./icc.zsh ${1/#1/2} $'in\n'
 
 while read -p x; do
   case $x in
