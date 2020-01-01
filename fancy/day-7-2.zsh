@@ -1,10 +1,9 @@
 #!/usr/bin/env zsh
 #
-# Usage: ./day-7-2.zsh ./icc.zsh "your puzzle input"
+# Usage: ./day-7-2.zsh <<<"your puzzle input"
 
-local intcode=("$@")
-
-function amp() { print -l $*; exec "${intcode[@]}" }
+local icc=(${ZSH_SCRIPT:h}/icc.zsh "$(<&0)")
+function amp() { print -l $*; exec $icc }
 
 for x in {56789..98765}; do
   [[ ${(j::)${(os::)x}} == 56789 ]] || continue
