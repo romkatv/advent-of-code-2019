@@ -13,7 +13,7 @@ coproc ./icc.zsh ${1/#1/2} $'in\n'
 
 while read -p x; do
   case $x in
-    in) sleep 0.5
+    in) sleep 0.25
         local joystick=0
         while read -rkt x; do joystick=${keys[${(L)x}]:-0}; done
         print -p $joystick;;
