@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 #
-# Usage: ./day-7-2.zsh <<<"your puzzle input"
+# Usage: day-7-2.zsh <<<"your puzzle input"
 
 local icc=(${ZSH_SCRIPT:h}/icc.zsh "$(<&0)")
 function amp() { print -l $*; exec $icc }

@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 #
-# Usage: ./day-13-2.zsh <<<"your puzzle input"
+# Usage: day-13-2.zsh <<<"your puzzle input"
 
 coproc ${ZSH_SCRIPT:h}/icc.zsh ${"$(<&0)"/#1/2} $'in\n'
 
