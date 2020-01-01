@@ -1,13 +1,14 @@
 #!/usr/bin/env zsh
 #
 # Terminal-based Breakout game.
+#
+# Usage: ./breakout.zsh "your puzzle input"
 
 local -ra tiles=(0 7 4 2 1)
 local -rA keys=(a -1 d 1)
 
-exec 2>/dev/null
-trap 'kill $!; echoti cnorm; stty echo' EXIT INT QUIT ILL PIPE TERM ZERR
-coproc ${ZSH_SCRIPT:h}/icc.zsh "$(<${ZSH_SCRIPT:h}/breakout.ic)" $'in\n'
+trap 'echoti cnorm; stty echo' EXIT INT QUIT ILL PIPE TERM ZERR
+coproc ./icc.zsh ${1/#1/2} $'in\n'
 echoti clear; echoti civis; stty -echo
 
 while read -p x; do
