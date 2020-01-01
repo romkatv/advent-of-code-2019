@@ -184,8 +184,7 @@ while read -p x; do
 done
 ```
 
-Firing it up relealed the game as a [Breakout](https://en.wikipedia.org/wiki/Breakout_(video_game))
-clone!
+Firing it up... it's a [Breakout](https://en.wikipedia.org/wiki/Breakout_(video_game)) clone!
 
 ![Playing Breakout on Intcode Computer](
   https://raw.githubusercontent.com/romkatv/advent-of-code-2019/master/fancy/breakout.gif)
