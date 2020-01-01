@@ -18,7 +18,7 @@ while read -p x; do
         print -p $joystick;;
     -1) read -p dummy; read -p score
         echoti home
-        print -n "Score: $score";;
+        print -nP "Score: $score%E";;
      *) read -p y; read -p tile
         echoti cup $((y+2)) $x
         print -nP "%K{$tiles[tile+1]} %k";;
