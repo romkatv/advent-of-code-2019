@@ -187,7 +187,7 @@ done
 Firing it up relealed the game as a [Breakout](https://en.wikipedia.org/wiki/Breakout_(video_game))
 clone!
 
-![Breakout on Intcode Computer](
+![Playing Breakout on Intcode Computer](
   https://raw.githubusercontent.com/romkatv/advent-of-code-2019/master/fancy/breakout.gif)
 
 The goal of the puzzle was to win the game. I spent a few minutes (totally not an hour!) hopelessly
@@ -209,6 +209,9 @@ done
 
 echo $score
 ```
+
+![Botting Breakout on Intcode Computer](
+  https://raw.githubusercontent.com/romkatv/advent-of-code-2019/master/fancy/breakout-bot.gif)
 
 As far as programming languages go, Zsh is slow. How slow exactly depends on the workload but for
 the kind of computation required by Advent of Code puzzles the answer is *very slow*. A
