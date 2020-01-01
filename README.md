@@ -154,6 +154,62 @@ So far, all problems were recipes. You obtain the solution by following the inst
 step. Eventually problems turned into proper puzzles whose statements describe the solution only
 indirectly, leaving it up to you to figure out how to obtain it.
 
+My favorite Intcode puzzle was revealed on day 13. We were given an Intcode implementation of an
+arcade game (`2,380,379,...`) and asked to build an arcade box for it. When the game code asks for
+input, it should be given the current joystick position (-1/0/1 for left/neutral/right). Output
+comes in triples: either `-1, 0, score` or `x, y, tile`. Lacking a physical arcade box I had to be
+content with using keyboard for input and terminal output for graphics.
+
+```zsh
+local -ra tiles=(0 7 4 2 1)
+local -rA keys=(a -1 d 1)
+
+trap 'echoti cnorm; stty echo' EXIT INT QUIT ILL PIPE TERM ZERR
+echoti clear; echoti civis; stty -echo
+coproc icc "2,380,379,..." $'in\n'
+
+while read -p x; do
+  case $x in
+    in) sleep 0.25
+        local joystick=0
+        while read -rkt x; do joystick=${keys[${(L)x}]:-0}; done
+        print -p $joystick;;
+    -1) read -p dummy; read -p score
+        echoti home
+        print -nP "Score: $score%E";;
+     *) read -p y; read -p tile
+        echoti cup $((y+2)) $x
+        print -nP "%K{$tiles[tile+1]} %k";;
+  esac
+done
+```
+
+Firing it up relealed the game as a [Breakout](https://en.wikipedia.org/wiki/Breakout_(video_game))
+clone!
+
+![Breakout on Intcode Computer](
+  https://raw.githubusercontent.com/romkatv/advent-of-code-2019/master/fancy/breakout.gif)
+
+The goal of the puzzle was to win the game. I spent a few minutes (totally not an hour!) hopelessly
+trying to beat the game manually. Easier said than done. Eventually I delegated the task of having
+fun playing the game to a simple bot that always moves the paddle in the direction of the ball.
+
+```zsh
+coproc icc "2,380,379,..." $'in\n'
+
+while read -p x; do
+  case $x in
+    in) print -p $((ball > paddle ? 1 : ball < paddle ? -1 : 0));;
+    -1) read -p dummy; read -p score;;
+     *) read -p y; read -p tile
+        [[ $tile == 3 ]] && paddle=$x
+        [[ $tile == 4 ]] && ball=$x;;
+  esac
+done
+
+echo $score
+```
+
 As far as programming languages go, Zsh is slow. How slow exactly depends on the workload but for
 the kind of computation required by Advent of Code puzzles the answer is *very slow*. A
 [direct translation](https://github.com/romkatv/advent-of-code-2019/blob/master/fancy/icc-pretty.cc)
