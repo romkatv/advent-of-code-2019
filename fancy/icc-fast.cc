@@ -48,17 +48,15 @@ constexpr auto table = []() {
   return t;
 }();
 
-template <class F, int Mode, int... Is>
+template <class F, int M, int... Is>
 void run() {
-  auto arg = [&](int i) -> int64_t& {
-    switch (Mode / (1 + 9 * (i > 0) + 90 * (i > 1)) % 10) {
-      case 1: return     mem[pc - sizeof...(Is) + i];
-      case 0: return mem[mem[pc - sizeof...(Is) + i]];
-      case 2: return mem[mem[pc - sizeof...(Is) + i] + base];
-    }
+  auto arg = [&](int i, int m) -> int64_t& {
+    if (m == 1) return     mem[pc - sizeof...(Is) + i];
+    if (m == 0) return mem[mem[pc - sizeof...(Is) + i]];
+    else        return mem[mem[pc - sizeof...(Is) + i] + base];
   };
   pc += sizeof...(Is) + 1;
-  (+*static_cast<F*>(0))(arg(Is)...);
+  (+*static_cast<F*>(0))(arg(Is, M / (1 + 9 * (Is > 0) + 90 * (Is > 1)) % 10)...);
   table[mem[pc]]();
 };
 

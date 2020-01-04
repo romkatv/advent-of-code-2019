@@ -221,7 +221,7 @@ https://github.com/romkatv/advent-of-code-2019/blob/master/fancy/icc-fast.cc) is
 still. \[This is likely [the fastest Intcode Computer](
 https://www.reddit.com/r/adventofcode/comments/egq9xn/2019_day_9_intcode_benchmarking_suite/fcar0oh)
 in the world. I had a lot of fun writing it. Take a look if you are into C++ or high-performance
-code in general. It's only 58 lines long and very readable. I've posted a short explanation of how
+code in general. It's only 56 lines long and very readable. I've posted a short explanation of how
 it works in [this comment](
 https://www.reddit.com/r/adventofcode/comments/ed5bxv/intcode_primality_generator/fbghid2/) on
 reddit.\]
