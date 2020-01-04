@@ -15,13 +15,24 @@
 #include <iostream>
 #include <sstream>
 
+static std::array<void(*)(), 22209> t;
 static int64_t pc, base, *mem = static_cast<int64_t*>(mmap(
     0, 1LL << 46, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_NORESERVE, 0, 0));
 
-template <class F, int Mode, int... Is> void run();
+template <class F, int M, int... Is>
+void run() {
+  auto arg = [&](int i, int m) -> int64_t& {
+    if (m == 1) return     mem[pc - sizeof...(Is) + i];
+    if (m == 0) return mem[mem[pc - sizeof...(Is) + i]];
+    else        return mem[mem[pc - sizeof...(Is) + i] + base];
+  };
+  pc += sizeof...(Is) + 1;
+  (+*static_cast<F*>(0))(arg(Is, M / (1 + 9 * (Is > 0) + 90 * (Is > 1)) % 10)...);
+  t[mem[pc]]();
+};
 
 template <int Mode = -1, int... Is, class Table, class F, class... Args>
-constexpr void op(Table& table, int opcode, F f, void (*)(Args...) = 0) {
+void op(Table& table, int opcode, F f, void (*)(Args...) = 0) {
   if constexpr (Mode == -1) {
     op<0>(table, opcode, f, +f);
   } else if constexpr (sizeof...(Is) == sizeof...(Args)) {
@@ -33,8 +44,7 @@ constexpr void op(Table& table, int opcode, F f, void (*)(Args...) = 0) {
   }
 }
 
-constexpr auto table = []() {
-  std::array<void(*)(), 22209> t = {};
+int main(int argc, char** argv) {
   op(t,  1, [](int64_t a, int64_t b, int64_t& r) { r = a + b             ; });  // add
   op(t,  2, [](int64_t a, int64_t b, int64_t& r) { r = a * b             ; });  // mul
   op(t,  7, [](int64_t a, int64_t b, int64_t& r) { r = a < b             ; });  // lt
@@ -45,22 +55,6 @@ constexpr auto table = []() {
   op(t,  4, [](int64_t a                       ) { std::cout << a << '\n'; });  // out
   op(t,  3, [](                      int64_t& r) { std::cin >> r         ; });  // in
   op(t, 99, [](                                ) { std::exit(0)          ; });  // hlt
-  return t;
-}();
-
-template <class F, int M, int... Is>
-void run() {
-  auto arg = [&](int i, int m) -> int64_t& {
-    if (m == 1) return     mem[pc - sizeof...(Is) + i];
-    if (m == 0) return mem[mem[pc - sizeof...(Is) + i]];
-    else        return mem[mem[pc - sizeof...(Is) + i] + base];
-  };
-  pc += sizeof...(Is) + 1;
-  (+*static_cast<F*>(0))(arg(Is, M / (1 + 9 * (Is > 0) + 90 * (Is > 1)) % 10)...);
-  table[mem[pc]]();
-};
-
-int main(int argc, char** argv) {
   for (std::istringstream ss(argv[1]); ss >> mem[pc++]; ss.get()) {}
-  table[mem[pc = 0]]();
+  t[mem[pc = 0]]();
 }
