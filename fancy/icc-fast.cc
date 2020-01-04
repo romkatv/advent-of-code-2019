@@ -14,7 +14,6 @@
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
-#include <tuple>
 
 static int64_t pc, base, *mem = static_cast<int64_t*>(mmap(
     0, 1LL << 46, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_NORESERVE, 0, 0));
@@ -51,19 +50,18 @@ constexpr auto table = []() {
 
 template <class F, int Arity, int Mode>
 void run() {
-  std::array<int64_t, Arity> args;
-  auto set_arg = [&](int i, int m) {
-    switch (Mode / m % 10) {
-      case 1: args[i] =            pc + i + 1 ; break;
-      case 0: args[i] =        mem[pc + i + 1]; break;
-      case 2: args[i] = base + mem[pc + i + 1]; break;
+  auto arg = [&](int i) -> int64_t& {
+    switch (Mode / (1 + 9 * (i > 0) + 90 * (i > 1)) % 10) {
+      case 1: return     mem[pc - Arity + i];
+      case 0: return mem[mem[pc - Arity + i]];
+      case 2: return mem[mem[pc - Arity + i] + base];
     }
   };
-  if (Arity > 0) set_arg(0, 1);
-  if (Arity > 1) set_arg(1, 10);
-  if (Arity > 2) set_arg(2, 100);
   pc += Arity + 1;
-  std::apply([=](auto... pos) { (+*static_cast<F*>(0))(mem[pos]...); }, args);
+  if constexpr (Arity == 0) (+*static_cast<F*>(0))();
+  if constexpr (Arity == 1) (+*static_cast<F*>(0))(arg(0));
+  if constexpr (Arity == 2) (+*static_cast<F*>(0))(arg(0), arg(1));
+  if constexpr (Arity == 3) (+*static_cast<F*>(0))(arg(0), arg(1), arg(2));
   table[mem[pc]]();
 };
 
