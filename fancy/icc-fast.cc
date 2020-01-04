@@ -18,18 +18,18 @@
 static int64_t pc, base, *mem = static_cast<int64_t*>(mmap(
     0, 1LL << 46, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_NORESERVE, 0, 0));
 
-template <class F, int Arity, int Mode> void run();
+template <class F, int Mode, int... Is> void run();
 
-template <int N = -1, int Mode = -1, class Table, class F, class... Args>
+template <int Mode = -1, int... Is, class Table, class F, class... Args>
 constexpr void op(Table& table, int opcode, F f, void (*)(Args...) = 0) {
-  if constexpr (N == -1) {
-    op<0, 0>(table, opcode, f, +f);
-  } else if constexpr (N == sizeof...(Args)) {
-    table[100 * Mode + opcode] = &run<F, N, Mode>;
+  if constexpr (Mode == -1) {
+    op<0>(table, opcode, f, +f);
+  } else if constexpr (sizeof...(Is) == sizeof...(Args)) {
+    table[100 * Mode + opcode] = &run<F, Mode, Is...>;
   } else {
-    op<N + 1, Mode * 10 + 0>(table, opcode, f, +f);
-    op<N + 1, Mode * 10 + 1>(table, opcode, f, +f);
-    op<N + 1, Mode * 10 + 2>(table, opcode, f, +f);
+    op<Mode * 10 + 0, Is..., sizeof...(Is)>(table, opcode, f, +f);
+    op<Mode * 10 + 1, Is..., sizeof...(Is)>(table, opcode, f, +f);
+    op<Mode * 10 + 2, Is..., sizeof...(Is)>(table, opcode, f, +f);
   }
 }
 
@@ -48,20 +48,17 @@ constexpr auto table = []() {
   return t;
 }();
 
-template <class F, int Arity, int Mode>
+template <class F, int Mode, int... Is>
 void run() {
   auto arg = [&](int i) -> int64_t& {
     switch (Mode / (1 + 9 * (i > 0) + 90 * (i > 1)) % 10) {
-      case 1: return     mem[pc - Arity + i];
-      case 0: return mem[mem[pc - Arity + i]];
-      case 2: return mem[mem[pc - Arity + i] + base];
+      case 1: return     mem[pc - sizeof...(Is) + i];
+      case 0: return mem[mem[pc - sizeof...(Is) + i]];
+      case 2: return mem[mem[pc - sizeof...(Is) + i] + base];
     }
   };
-  pc += Arity + 1;
-  if constexpr (Arity == 0) (+*static_cast<F*>(0))();
-  if constexpr (Arity == 1) (+*static_cast<F*>(0))(arg(0));
-  if constexpr (Arity == 2) (+*static_cast<F*>(0))(arg(0), arg(1));
-  if constexpr (Arity == 3) (+*static_cast<F*>(0))(arg(0), arg(1), arg(2));
+  pc += sizeof...(Is) + 1;
+  (+*static_cast<F*>(0))(arg(Is)...);
   table[mem[pc]]();
 };
 
