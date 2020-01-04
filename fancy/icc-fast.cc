@@ -26,7 +26,7 @@ void run() {
     else        return mem[mem[pc - sizeof...(Is) + i] + base];
   };
   pc += sizeof...(Is) + 1;
-  (+*static_cast<F*>(0))(arg(Is, M / (1 + 9 * (Is > 0) + 90 * (Is > 1)) % 10)...);
+  (+*static_cast<F*>(0))(arg(Is, M / (Is == 0 ? 1 : Is == 1 ? 10 : 100) % 10)...);
   t[mem[pc]]();
 };
 
