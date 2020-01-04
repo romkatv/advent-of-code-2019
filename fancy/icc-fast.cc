@@ -10,12 +10,11 @@
 
 #include <stdint.h>
 #include <sys/mman.h>
-#include <array>
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
 
-static std::array<void(*)(), 22209> t;
+static void(*t[22209])();
 static int64_t pc, base, *mem = static_cast<int64_t*>(mmap(
     0, 1LL << 46, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_NORESERVE, 0, 0));
 
