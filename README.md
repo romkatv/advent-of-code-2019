@@ -221,10 +221,14 @@ https://github.com/romkatv/advent-of-code-2019/blob/master/fancy/icc-fast.cc) is
 still. \[This is likely [the fastest Intcode Computer](
 https://www.reddit.com/r/adventofcode/comments/egq9xn/2019_day_9_intcode_benchmarking_suite/fcar0oh)
 in the world. I had a lot of fun writing it. Take a look if you are into C++ or high-performance
-code in general. It's only 44 lines long and very readable. I've posted a short explanation of how
-it works in [this comment](
-https://www.reddit.com/r/adventofcode/comments/ed5bxv/intcode_primality_generator/fbghid2/) on
-reddit.\]
+code in general. It's only 44 lines but quite tricky. I've posted a few details about the
+implementation in [these](
+https://www.reddit.com/r/adventofcode/comments/ed5bxv/intcode_primality_generator/fbghid2/)
+[reddit](
+  https://www.reddit.com/r/adventofcode/comments/egq9xn/2019_day_9_intcode_benchmarking_suite/fd9f2zc/)
+[comments](
+  https://www.reddit.com/r/adventofcode/comments/egq9xn/2019_day_9_intcode_benchmarking_suite/fdbr79e/)
+.\]
 
 I was committed to finding a solution to every puzzle that would run in Zsh in less than a minute
 (the same algorithm would run in a few milliseconds in C++). However, *getting* to the solution
