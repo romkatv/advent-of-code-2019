@@ -1,6 +1,6 @@
 .RECIPEPREFIX = >
 
-all: icc-pretty icc-fast day-22-2 tiny
+all: icc-pretty icc-fast day-22-2
 
 icc-pretty: Makefile icc-pretty.cc
 > g++ -std=c++17 -O3 -o icc-pretty icc-pretty.cc
