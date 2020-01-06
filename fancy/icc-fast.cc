@@ -7,6 +7,9 @@
 //
 // Example: icc-fast "3,0,102,2,0,0,4,0,99" <<<"21"
 // Output:  42
+//
+// Note: Requires gcc to build and x86_64 Linux as root to run. Other
+// compilers, architectures and operating systems are not supported.
 
 #include <stdint.h>
 #include <sys/mman.h>
