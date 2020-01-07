@@ -217,12 +217,12 @@ the kind of computation required by Advent of Code puzzles the answer is *very s
 [direct translation](https://github.com/romkatv/advent-of-code-2019/blob/master/fancy/icc-pretty.cc)
 of my Zsh Intcode Computer to C++ is between 3000 and 25000 faster, depending on the program. An
 [optimized C++ implementation](
-https://github.com/romkatv/advent-of-code-2019/blob/master/fancy/icc-fast.cc) is 4 times faster
+https://github.com/romkatv/advent-of-code-2019/blob/master/fancy/icc-fast.cc) is 6 times faster
 still. \[This is likely [the fastest Intcode Computer](
 https://www.reddit.com/r/adventofcode/comments/egq9xn/2019_day_9_intcode_benchmarking_suite/fcar0oh)
-in the world. I had a lot of fun writing it. Take a look if you are into C++ or high-performance
-code in general. It's only 44 lines but quite tricky. I've posted a few details about the
-implementation in [these](
+in the world. It executes one Intcode instruction per nanosecond. I had a lot of fun writing it.
+Take a look if you are into C++ or high-performance code in general. It's only 44 lines but quite
+tricky. I've posted a few details about the implementation in [these](
 https://www.reddit.com/r/adventofcode/comments/ed5bxv/intcode_primality_generator/fbghid2/)
 [reddit](
   https://www.reddit.com/r/adventofcode/comments/egq9xn/2019_day_9_intcode_benchmarking_suite/fd9f2zc/)
