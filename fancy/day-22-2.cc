@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdlib.h>
 #include <iostream>
 #include <string>
 
@@ -18,10 +19,11 @@ static int64_t pow(int64_t a, int64_t b) { return combine(mul, 1, a, b); }
 int main() {
   int64_t k = 1, b = 0, x;
   for (std::string s; std::getline(std::cin, s);) {
-    if (s.find("new") + 1) { k = add(0, -k)                          ; b = add(-1, -b); }
-    if (s.find("inc") + 1) { k = mul(k, x = std::stoll(s.substr(20))); b = mul(b, x)  ; }
-    if (s.find("cut") + 1) { b = add(b, -std::stoll(s.substr(4)))                     ; }
+    x = atoll(s.substr(s.find_last_of(' ') + 1).c_str());
+    if (s.find("new") + 1) { k = add(0, -k); b = add(-1, -b); }
+    if (s.find("inc") + 1) { k = mul(k, x) ; b = mul(b, x)  ; }
+    if (s.find("cut") + 1) { k = k         ; b = add(b, -x) ; }
   }
-  x=mul(b, pow(k-1, m-2));
+  x = mul(b, pow(k-1, m-2));
   std::cout << add(mul(add(x, needle), pow(pow(k, m-2), n)), -x) << std::endl;
 }
