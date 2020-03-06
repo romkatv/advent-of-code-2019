@@ -21,8 +21,8 @@ int main() {
   for (std::string s; std::getline(std::cin, s);) {
     x = atoll(s.substr(s.find_last_of(' ') + 1).c_str());
     if (s.find("new") + 1) { k = add(0, -k); b = add(-1, -b); }
-    if (s.find("inc") + 1) { k = mul(k, x) ; b = mul(b, x)  ; }
-    if (s.find("cut") + 1) { k = k         ; b = add(b, -x) ; }
+    if (s.find("inc") + 1) { k = mul(k,  x); b = mul(b,   x); }
+    if (s.find("cut") + 1) { k = k         ; b = add(b,  -x); }
   }
   x = mul(b, pow(k-1, m-2));
   std::cout << add(mul(add(x, needle), pow(pow(k, m-2), n)), -x) << std::endl;
