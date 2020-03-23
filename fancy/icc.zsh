@@ -13,30 +13,30 @@
 # of the number and exit.
 
 local mem=(${(s:,:)1:?usage: icc.zsh <intcode> [prompt]})
-local -i pc base mode n
+local -i ip bp mode n
 
 function argpos() {
   local -i m='mode % 10'
   (( mode /= 10 ))
   case $m in
-    1) return '++pc'                ;;
-    0) return 'mem[++pc] + 1'       ;;
-    2) return 'mem[++pc] + 1 + base';;
+    1) return '++ip'              ;;
+    0) return 'mem[++ip] + 1'     ;;
+    2) return 'mem[++ip] + 1 + bp';;
   esac
 }
 
 function fetch() { (( mem[argpos()]          )) }
 function store() { (( mem[argpos()]=$1       )) }
-function jumpc() { (( pc += ($1) * ($2 - pc) )) }
+function jumpc() { (( ip += ($1) * ($2 - ip) )) }
 
 functions -M argpos 0
 functions -M fetch  0
 
 while true; do
-  mode='mem[++pc] / 100'
-  case $((mem[pc] % 100)); in
+  mode='mem[++ip] / 100'
+  case $((mem[ip] % 100)); in
     99) exit 0                        ;;  # hlt
-     9) base+='fetch()'               ;;  # rel
+     9) bp+='fetch()'                 ;;  # rel
      1) store 'fetch() +  fetch()'    ;;  # add
      2) store 'fetch() *  fetch()'    ;;  # mul
      7) store 'fetch() <  fetch()'    ;;  # lt
