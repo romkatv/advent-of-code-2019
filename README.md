@@ -138,12 +138,12 @@ for n in {56789..98765}; do
   [[ ${(j::)${(os::)n}} == 56789 ]] || continue
   coproc amp $n[2] | amp $n[3] | amp $n[4] | amp $n[5] | amp $n[1] 0
   <&p >&p >&0 | tail -1
-done | sort | tail -1
+done | sort -n | tail -1
 ```
 
 `amp [arg]...` starts an amplifier and sends it predefined integers as first inputs. The loop goes
 over all permutations of `56789` and runs the circuit for each of them. After the loop, the maximum
-signal value is acquired with `sort | tail -1` pipeline.
+signal value is acquired with `sort -n | tail -1` pipeline.
 
 In C++ I would use `std::next_permutation` to go over all permutations. Rather than implementing
 this algorithm in Zsh, I'm iterating over all numbers between 56789 and 98765 and skipping the wrong
