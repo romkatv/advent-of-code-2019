@@ -334,7 +334,7 @@ int main() {
     if (s.find("cut") + 1) { b = add(b,  -a); k = k         ; }
     if (s.find("new") + 1) { b = add(-1, -b); k = add(0, -k); }
   }
-  int64_t x=mul(b, pow(k-1, m-2));
+  int64_t x = mul(b, pow(k-1, m-2));
   cout << add(mul(add(x, 2020), pow(pow(k, m-2), n)), -x) << endl;
 }
 ```
