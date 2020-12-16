@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 
 emulate -L zsh
-setopt no_aliases err_exit no_unset extended_glob pipe_fail warn_create_global
+setopt err_exit no_unset extended_glob pipe_fail warn_create_global re_match_pcre
 
 local min max
 IFS=- read -r min max
